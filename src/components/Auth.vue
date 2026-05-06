@@ -14,7 +14,9 @@ let unsubscribeAuth = () => {}
 onMounted(() => {
   unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
     user.value = u
-    if (u) await ensureUserAccount(u)
+    if (u) {
+      await ensureUserAccount(u)
+    }
   })
 })
 
@@ -23,7 +25,21 @@ onUnmounted(() => {
 })
 
 async function connectWithGoogle() {
-  await signInWithPopup(auth, googleProvider)
+  try {
+    const { user: firebaseUser } = await signInWithPopup(auth, googleProvider)
+    await ensureUserAccount(firebaseUser)
+  } catch (err) {
+    const code = err?.code
+    if (code === 'auth/popup-closed-by-user') {
+      console.info('[accounts] Google sign-in cancelled (popup closed)')
+      return
+    }
+    console.error('[accounts] connectWithGoogle failed', {
+      code,
+      message: err?.message,
+      err,
+    })
+  }
 }
 
 async function logout() {

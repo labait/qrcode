@@ -1,5 +1,8 @@
 rules_version = '2';
 
+// Copia tutto questo file in Firebase Console → Firestore → Regole → Pubblica
+// (oppure: firebase deploy --only firestore:rules)
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -18,34 +21,26 @@ service cloud.firestore {
         get(currentAccountPath()).data.roles.hasAny(['admin']);
     }
 
-    // Account: solo chi ha account.uid == uid autenticato (stesso modello concettuale degli items)
     function ownsAccount() {
       return signedIn() &&
+        resource != null &&
         resource.data.keys().hasAny(['uid']) &&
         resource.data.uid == request.auth.uid;
     }
 
-    function createsOwnAccount() {
-      return signedIn() &&
-        request.resource.data.keys().hasAny(['uid']) &&
-        request.resource.data.uid == request.auth.uid;
-    }
-
-    // Solo gli admin possono modificare roles (niente auto-promozione a admin)
     function accountRolesUntouched() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['roles']);
     }
 
-    function accountCreateRolesAllowed() {
-      return !request.resource.data.keys().hasAny(['roles']) ||
-        (
-          request.resource.data.roles is list &&
-          !request.resource.data.roles.hasAny(['admin'])
-        );
+    function uidUnchanged() {
+      return request.resource.data.keys().hasAny(['uid']) &&
+        resource.data.keys().hasAny(['uid']) &&
+        request.resource.data.uid == resource.data.uid;
     }
 
     function ownsItem() {
       return signedIn() &&
+        resource != null &&
         resource.data.keys().hasAny(['uid']) &&
         resource.data.uid == request.auth.uid;
     }
@@ -56,20 +51,23 @@ service cloud.firestore {
         request.resource.data.uid == request.auth.uid;
     }
 
-    function uidUnchanged() {
-      return request.resource.data.keys().hasAny(['uid']) &&
-        resource.data.keys().hasAny(['uid']) &&
-        request.resource.data.uid == resource.data.uid;
-    }
-
     match /accounts/{accountId} {
-      allow read: if ownsAccount() || isAdmin();
+      // Due regole separate (OR): la prima non usa resource → ok su documento assente (getDoc prima del setDoc).
+      allow read: if signedIn() && request.auth.uid == accountId;
 
-      allow create: if isAdmin() ||
-        (
+      allow read: if isAdmin();
+
+      // Bootstrap account client: uid, roles, name, email (email coerente col token Auth).
+      allow create: if isAdmin() || (
+          signedIn() &&
           accountId == request.auth.uid &&
-          createsOwnAccount() &&
-          accountCreateRolesAllowed()
+          request.resource.data.keys().hasAll(['uid', 'roles', 'name', 'email']) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.roles is list &&
+          !request.resource.data.roles.hasAny(['admin']) &&
+          request.resource.data.name is string &&
+          request.resource.data.email is string &&
+          request.auth.token.email == request.resource.data.email
         );
 
       allow update: if isAdmin() ||
@@ -83,7 +81,12 @@ service cloud.firestore {
     }
 
     match /items/{itemId} {
-      allow read: if ownsItem() || isAdmin();
+      allow read: if isAdmin();
+
+      allow read: if signedIn() &&
+        resource != null &&
+        resource.data.keys().hasAny(['uid']) &&
+        resource.data.uid == request.auth.uid;
 
       allow create: if isAdmin() || createsOwnItem();
 
