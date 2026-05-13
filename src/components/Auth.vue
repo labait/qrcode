@@ -6,28 +6,27 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth'
 import { auth, googleProvider, ensureUserAccount, getAccountByUid } from '../firebase.js'
-import { useGlobal } from '../composables/global.js'
 
+import { useGlobal } from '../composables/global.js'
 const global = useGlobal()
+
 const user = ref(null)
 
 let unsubscribeAuth = () => {}
 
 onMounted(() => {
+  global.loading ++
   unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
     user.value = u
     if (!u) {
       global.account = null
-      global.loading = false
       return
     }
-
-    global.loading = true
     try {
       await ensureUserAccount(u)
       global.account = await getAccountByUid(u.uid)
     } finally {
-      global.loading = false
+      global.loading --
     }
   })
 })

@@ -81,18 +81,15 @@ service cloud.firestore {
     }
 
     match /items/{itemId} {
-      allow read: if isAdmin();
+      // Everyone can read items
+      allow read: if true;
 
-      allow read: if signedIn() &&
-        resource != null &&
-        resource.data.keys().hasAny(['uid']) &&
-        resource.data.uid == request.auth.uid;
+      // Only logged-in users with matching uid can create or update their own items
+      allow create: if createsOwnItem();
+      allow update: if ownsItem();
 
-      allow create: if isAdmin() || createsOwnItem();
-
-      allow update: if isAdmin() || (ownsItem() && uidUnchanged());
-
-      allow delete: if ownsItem() || isAdmin();
+      // Admins can modify or delete any item
+      allow update, delete: if isAdmin();
     }
   }
 }

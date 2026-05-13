@@ -4,7 +4,7 @@ export const globalInjectionKey = Symbol('global')
 
 export function createGlobalState() {
   return reactive({
-    loading: false,
+    loading: 0,
     dialog: null,
     account: null,
   })
