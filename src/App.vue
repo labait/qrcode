@@ -3,10 +3,7 @@ import { provide } from 'vue'
 import { createGlobalState, globalInjectionKey } from './composables/global.js'
 
 import Auth from './components/Auth.vue'
-
-import Test from './components/Test.vue'
 import Loading from './components/Loading.vue'
-import ItemsList from './components/ItemsList.vue'
 
 const global = createGlobalState()
 provide(globalInjectionKey, global)
@@ -19,8 +16,7 @@ provide(globalInjectionKey, global)
     <main
       class="mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center px-4 py-4"
     >
-      <ItemsList class="mb-4"/>
-      <Test />
+      <router-view />
     </main>
   </div>
 </template>
