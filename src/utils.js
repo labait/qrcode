@@ -138,6 +138,31 @@ function timestampMs(ts) {
   return 0
 }
 
+/** `true` se `nowMs` è nell’intervallo evento; `valid_from` / `valid_to` assenti → quel limite non si applica. */
+function isNowWithinEventValidity(ev, nowMs) {
+  if (ev.valid_from != null) {
+    const from = timestampMs(ev.valid_from)
+    if (Number.isFinite(from) && nowMs < from) return false
+  }
+  if (ev.valid_to != null) {
+    const to = timestampMs(ev.valid_to)
+    if (Number.isFinite(to) && nowMs > to) return false
+  }
+  return true
+}
+
+/**
+ * Documento `events/{eventDocId}` per join su `participations.event_id`.
+ * @param {string | null | undefined} eventDocId
+ */
+async function getEventDocumentById(eventDocId) {
+  if (eventDocId == null || String(eventDocId).trim() === '') return null
+  const id = String(eventDocId).trim()
+  const snap = await getDoc(doc(db, COLLECTION_EVENTS, id))
+  if (!snap.exists()) return null
+  return { ...snap.data(), id: snap.id }
+}
+
 /**
  * Tra tutte le partecipazioni per `uid` e l’evento risolto da `str` (`getEvent`)
  * senza `ended_at`, restituisce la più recente per `created_at` (discendente).
@@ -167,4 +192,39 @@ export async function verifyCurrentParticipation(str, uid) {
     )
 
   return active[0] ?? null
+}
+
+/**
+ * Partecipazioni attive dell’utente (`ended_at` assente), ordinate per `created_at` DESC.
+ * Si caricano gli eventi collegati e si tiene solo chi è nel periodo [`valid_from`, `valid_to`]
+ * rispetto a ora (campo assente = quel limite non applicato).
+ *
+ * @param {string | null | undefined} uid
+ * @returns {Promise<object | null>} Prima partecipazione della lista così filtrata, o null
+ */
+export async function verifyAnyParticipation(uid) {
+  if (uid == null || String(uid).trim() === '') return null
+
+  const qRef = query(
+    collection(db, COLLECTION_PARTICIPATIONS),
+    where('uid', '==', uid),
+    limit(100),
+  )
+  const snap = await getDocs(qRef)
+
+  const activeSorted = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((p) => p.ended_at == null)
+    .sort((a, b) => timestampMs(b.created_at) - timestampMs(a.created_at))
+
+  const nowMs = Date.now()
+
+  for (const p of activeSorted) {
+    const ev = await getEventDocumentById(p.event_id)
+    if (!ev) continue
+    if (!isNowWithinEventValidity(ev, nowMs)) continue
+    return p
+  }
+
+  return null
 }

@@ -21,12 +21,13 @@ const padBottomForAdminBar = computed(() =>
   <Loading v-if="global.loading > 0" />
   <Dialog />
   <div class="flex min-h-screen flex-col">
-    <AppHeader />
+    <AppHeader class="mb-8"/>
+    <Auth />
     <main
       class="mx-auto flex max-w-6xl flex-1 flex-col items-center justify-center py-4 transition-[padding]"
       :class="padBottomForAdminBar"
     >
-      <Auth />
+      
       <router-view />
     </main>
     <AdminBar />
