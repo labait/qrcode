@@ -1,10 +1,9 @@
 <script setup>
-import { signInWithPopup } from 'firebase/auth'
-import { auth, microsoftProvider } from '../firebase.js'
+import { signInWithMicrosoftPreferred } from '../firebase.js'
 
 async function connectWithMicrosoft() {
   try {
-    await signInWithPopup(auth, microsoftProvider)
+    await signInWithMicrosoftPreferred()
   } catch (err) {
     const code = err?.code
     if (code === 'auth/popup-closed-by-user') {
