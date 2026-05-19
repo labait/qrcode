@@ -7,6 +7,10 @@ export function createGlobalState() {
     loading: 0,
     dialog: null,
     account: null,
+    /** Evento corrente (es. dopo join a una partecipazione). */
+    event: null,
+    /** Partecipazione corrente `{ id, ... }`. */
+    participation: null,
   })
 }
 

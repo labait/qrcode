@@ -19,7 +19,7 @@ const visible = computed(() => isAdmin(global.account))
     >
       <RouterLink
         to="/admin/events"
-        class="rounded-lg px-3 py-2 text-base font-medium text-white/95 underline-offset-4 transition hover:text-white hover:underline"
+        class="rounded-md px-3  text-base  text-white/95 underline-offset-4 transition hover:text-white hover:underline"
       >
         Eventi QR
       </RouterLink>

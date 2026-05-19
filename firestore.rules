@@ -100,6 +100,36 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /participations/{participationId} {
+      function ownsParticipation() {
+        return signedIn() &&
+          resource != null &&
+          resource.data.keys().hasAny(['uid']) &&
+          resource.data.uid == request.auth.uid;
+      }
+
+      function participationCreateValid() {
+        return request.resource.data.keys().hasAll(['created_at', 'uid', 'event_id']) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.event_id is string;
+      }
+
+      function participationEndOnly() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ended_at']);
+      }
+
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+
+      allow create: if signedIn() && participationCreateValid();
+
+      allow update: if signedIn() && ownsParticipation() &&
+        participationEndOnly() &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.event_id == resource.data.event_id;
+
+      allow delete: if isAdmin();
+    }
+
     /** Regole conservative (come items): pubblico può leggere; scrittura solo admin. */
     match /qrcodes/{qrcodeId} {
       allow read: if true;

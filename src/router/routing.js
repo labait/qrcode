@@ -3,7 +3,19 @@ import HomeView from '../views/HomeView.vue'
 import DetailView from '../views/DetailView.vue'
 import LoginView from '../views/LoginView.vue'
 import AdminEventsView from '../views/AdminEventsView.vue'
+import EventView from '../views/EventView.vue'
+import ParticipationView from '../views/ParticipationView.vue'
 import { auth, getAccountByUid, isAdmin, isLoggedIn } from '../firebase.js'
+
+/** Solo utenti autenticati (es. join partecipazione). */
+async function beforeEnterRequireAuth(_to, _from, next) {
+  await auth.authStateReady()
+  if (!isLoggedIn()) {
+    next({ name: 'login' })
+    return
+  }
+  next()
+}
 
 /** Accesso alle rotte `/admin/*`: login + ruolo admin. */
 async function beforeEnterRequireAdmin(_to, _from, next) {
@@ -49,6 +61,17 @@ const routes = [
     path: '/items/:id',
     name: 'itemDetail',
     component: DetailView,
+  },
+  {
+    path: '/qrcodes/:id',
+    name: 'eventQrcode',
+    component: EventView,
+  },
+  {
+    path: '/participations/:id',
+    name: 'participationDetail',
+    component: ParticipationView,
+    beforeEnter: beforeEnterRequireAuth,
   },
   {
     path: '/admin/events',
