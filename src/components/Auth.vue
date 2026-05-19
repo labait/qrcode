@@ -6,7 +6,6 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth'
 import { auth, ensureUserAccount, getAccountByUid } from '../firebase.js'
-import { LS_KEY_QRCODE_URL, normalizeStoredQrcodeResume } from '../utils.js'
 
 import { useGlobal } from '../composables/global.js'
 
@@ -59,41 +58,6 @@ onMounted(() => {
       await ensureUserAccount(u)
       global.account = await getAccountByUid(u.uid)
 
-      let pendingRaw = null
-      try {
-        pendingRaw = localStorage.getItem(LS_KEY_QRCODE_URL)
-      } catch (e) {
-        console.warn('[Auth] localStorage get qrcode_url', e)
-      }
-      const trimmed =
-        pendingRaw != null && String(pendingRaw).trim() !== ''
-          ? String(pendingRaw).trim()
-          : ''
-
-      if (trimmed !== '') {
-        try {
-          localStorage.removeItem(LS_KEY_QRCODE_URL)
-        } catch (e) {
-          console.warn('[Auth] localStorage remove qrcode_url', e)
-        }
-
-        const norm = normalizeStoredQrcodeResume(trimmed)
-        if (norm?.type === 'internalPath') {
-          await router.replace(norm.path)
-          return
-        }
-        if (norm?.type === 'externalHref') {
-          window.location.assign(norm.href)
-          return
-        }
-        if (norm?.type === 'legacyId') {
-          await router.replace({
-            name: 'eventQrcode',
-            params: { id: norm.id },
-          })
-          return
-        }
-      }
       if (route.name === 'login') {
         await router.replace({ name: 'home' })
       }
