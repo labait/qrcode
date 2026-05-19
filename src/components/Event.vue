@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import QrCode from './QrCode.vue/index.js'
+import QrCode from './QrCode.vue'
 import { absoluteUrl } from '../utils.js'
 
 const props = defineProps({
