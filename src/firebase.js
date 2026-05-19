@@ -1,14 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
-import {
-  getAuth,
-  GoogleAuthProvider,
-  OAuthProvider,
-  browserPopupRedirectResolver,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-} from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
 import {
   getFirestore,
   doc,
@@ -49,75 +41,8 @@ microsoftProvider.addScope('openid')
 microsoftProvider.addScope('profile')
 microsoftProvider.setCustomParameters({
   tenant: MICROSOFT_TENANT_ID,
+  prompt: 'select_account',
 })
-
-/**
- * Su iPhone/iPad (anche Chrome “CriOS”, che usa WebKit) il popup OAuth spesso non aggiorna
- * correttamente la finestra dell’app → login completato ma UI ancora su `/login`.
- * Firebase consiglia il redirect flow su mobile.
- *
- * @see https://firebase.google.com/docs/auth/web/redirect-best-practices
- */
-export function shouldUseOAuthRedirect() {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent || ''
-  if (/iPhone|iPad|iPod/i.test(ua)) return true
-  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-    return true
-  return false
-}
-
-/**
- * Consuma il redirect OAuth (Microsoft/Google). Su Safari/WebKit va usato lo stesso
- * `browserPopupRedirectResolver` passato a `signInWithRedirect`, altrimenti spesso si ottiene
- * `auth/no-auth-event` e l’utente resta su `/login`.
- */
-export async function consumeAuthRedirectResult() {
-  try {
-    await getRedirectResult(auth, browserPopupRedirectResolver)
-  } catch (err) {
-    const code = err?.code ?? err?.name
-    if (code === 'auth/no-auth-event') return
-    console.warn('[auth] getRedirectResult', {
-      code,
-      message: err?.message,
-      err,
-    })
-  }
-}
-
-/**
- * Dopo un redirect OAuth: consuma il risultato poi attendi l’init Auth (currentUser aggiornato).
- * Usare prima di guard router / mount dove si legge `auth.currentUser`.
- */
-export async function ensureAuthReady() {
-  await consumeAuthRedirectResult()
-  await auth.authStateReady()
-}
-
-export async function signInWithGooglePreferred() {
-  if (shouldUseOAuthRedirect()) {
-    await signInWithRedirect(
-      auth,
-      googleProvider,
-      browserPopupRedirectResolver,
-    )
-    return
-  }
-  await signInWithPopup(auth, googleProvider)
-}
-
-export async function signInWithMicrosoftPreferred() {
-  if (shouldUseOAuthRedirect()) {
-    await signInWithRedirect(
-      auth,
-      microsoftProvider,
-      browserPopupRedirectResolver,
-    )
-    return
-  }
-  await signInWithPopup(auth, microsoftProvider)
-}
 
 /** Analytics requires a browser environment. */
 export const analytics =

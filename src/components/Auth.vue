@@ -116,7 +116,7 @@ async function logout() {
       class="mx-auto flex w-full max-w-5xl justify-center gap-3 px-4"
     >
       <template v-if="!user">
- 
+    
       </template>
       <template v-else>
         <div

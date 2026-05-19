@@ -5,17 +5,11 @@ import LoginView from '../views/LoginView.vue'
 import AdminEventsView from '../views/AdminEventsView.vue'
 import EventView from '../views/EventView.vue'
 import ParticipationView from '../views/ParticipationView.vue'
-import {
-  auth,
-  ensureAuthReady,
-  getAccountByUid,
-  isAdmin,
-  isLoggedIn,
-} from '../firebase.js'
+import { auth, getAccountByUid, isAdmin, isLoggedIn } from '../firebase.js'
 
 /** Solo utenti autenticati (es. join partecipazione). */
 async function beforeEnterRequireAuth(_to, _from, next) {
-  await ensureAuthReady()
+  await auth.authStateReady()
   if (!isLoggedIn()) {
     next({ name: 'login' })
     return
@@ -25,7 +19,7 @@ async function beforeEnterRequireAuth(_to, _from, next) {
 
 /** Accesso alle rotte `/admin/*`: login + ruolo admin. */
 async function beforeEnterRequireAdmin(_to, _from, next) {
-  await ensureAuthReady()
+  await auth.authStateReady()
   if (!isLoggedIn()) {
     next({ name: 'login' })
     return
@@ -50,7 +44,7 @@ const routes = [
     name: 'login',
     component: LoginView,
     async beforeEnter(_to, _from, next) {
-      await ensureAuthReady()
+      await auth.authStateReady()
       if (isLoggedIn()) next({ name: 'home' })
       else next()
     },

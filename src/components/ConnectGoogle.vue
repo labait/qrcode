@@ -1,9 +1,10 @@
 <script setup>
-import { signInWithGooglePreferred } from '../firebase.js'
+import { signInWithPopup } from 'firebase/auth'
+import { auth, googleProvider } from '../firebase.js'
 
 async function connectWithGoogle() {
   try {
-    await signInWithGooglePreferred()
+    await signInWithPopup(auth, googleProvider)
   } catch (err) {
     const code = err?.code
     if (code === 'auth/popup-closed-by-user') {
