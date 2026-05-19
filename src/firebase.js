@@ -7,10 +7,6 @@ import {
   getDoc,
   setDoc,
   collection,
-  query,
-  where,
-  getDocs,
-  limit,
   addDoc,
   updateDoc,
   serverTimestamp,
@@ -52,7 +48,6 @@ export const analytics =
   typeof window !== 'undefined' ? getAnalytics(app) : null
 
 const ACCOUNTS = 'accounts'
-const EVENTS = 'events'
 const PARTICIPATIONS = 'participations'
 
 const LOG = '[accounts]'
@@ -166,86 +161,7 @@ export async function getAccountByUid(uid) {
   return { id: snap.id, ...snap.data() }
 }
 
-// ----- Events (lookup centralizzato) -----
-
-/**
- * Risolve un event dalla stringa del QR/parametro route:
- * 1) documento `events/{param}` se esiste;
- * 2) primo doc con campo `id` uguale a `param`;
- * 3) primo doc con campo `name` uguale a `param`.
- * @param {string} param
- * @returns {Promise<object | null>} `{ id, ...data }` con `id` = id documento
- */
-export async function findEventByQrcodeParam(param) {
-  if (param == null || String(param).trim() === '') return null
-  const trimmed = String(param).trim()
-
-  const direct = await getDoc(doc(db, EVENTS, trimmed))
-  if (direct.exists()) {
-    return { ...direct.data(), id: direct.id }
-  }
-
-  const qByFieldId = query(
-    collection(db, EVENTS),
-    where('id', '==', trimmed),
-    limit(1),
-  )
-  const snapId = await getDocs(qByFieldId)
-  if (!snapId.empty) {
-    const d = snapId.docs[0]
-    return { ...d.data(), id: d.id }
-  }
-
-  const qByName = query(
-    collection(db, EVENTS),
-    where('name', '==', trimmed),
-    limit(1),
-  )
-  const snapName = await getDocs(qByName)
-  if (!snapName.empty) {
-    const d = snapName.docs[0]
-    return { ...d.data(), id: d.id }
-  }
-
-  return null
-}
-
-/**
- * @param {string} eventDocumentId
- * @returns {Promise<object | null>}
- */
-export async function getEventByDocumentId(eventDocumentId) {
-  if (!eventDocumentId) return null
-  const snap = await getDoc(doc(db, EVENTS, eventDocumentId))
-  if (!snap.exists()) return null
-  return { ...snap.data(), id: snap.id }
-}
-
 // ----- Participations -----
-
-/**
- * Partecipazione attiva: stesso uid ed event_id, senza `ended_at`.
- * @param {string} uid
- * @param {string} eventDocumentId id documento della collezione events
- * @returns {Promise<object | null>} `{ id, ...data }`
- */
-export async function findActiveParticipationForUserEvent(uid, eventDocumentId) {
-  if (!uid || !eventDocumentId) return null
-  const qRef = query(
-    collection(db, PARTICIPATIONS),
-    where('uid', '==', uid),
-    where('event_id', '==', eventDocumentId),
-    limit(20),
-  )
-  const snap = await getDocs(qRef)
-  for (const d of snap.docs) {
-    const data = d.data()
-    if (data.ended_at == null) {
-      return { id: d.id, ...data }
-    }
-  }
-  return null
-}
 
 /**
  * @param {string} participationId

@@ -1,15 +1,10 @@
 <script setup>
-import { useRouter } from 'vue-router'
 import { signInWithPopup } from 'firebase/auth'
-import { auth, microsoftProvider, ensureUserAccount } from '../firebase.js'
-
-const router = useRouter()
+import { auth, microsoftProvider } from '../firebase.js'
 
 async function connectWithMicrosoft() {
   try {
-    const { user } = await signInWithPopup(auth, microsoftProvider)
-    await ensureUserAccount(user)
-    await router.replace({ name: 'home' })
+    await signInWithPopup(auth, microsoftProvider)
   } catch (err) {
     const code = err?.code
     if (code === 'auth/popup-closed-by-user') {

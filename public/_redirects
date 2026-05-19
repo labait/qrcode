@@ -1,0 +1,2 @@
+# SPA fallback: ogni path (es. /login, /qrcodes/xxx) riceve index.html (status 200 = rewrite, URL invariato)
+/*    /index.html   200

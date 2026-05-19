@@ -2,12 +2,8 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthStateChanged } from 'firebase/auth'
-import {
-  auth,
-  findEventByQrcodeParam,
-  findActiveParticipationForUserEvent,
-  createParticipation,
-} from '../firebase.js'
+import { auth, createParticipation } from '../firebase.js'
+import { getEvent, verifyCurrentParticipation, LS_KEY_QRCODE_URL } from '../utils.js'
 import { useGlobal } from '../composables/global.js'
 import EventCard from '../components/Event.vue'
 
@@ -17,7 +13,7 @@ const global = useGlobal()
 
 const event = ref(null)
 const loading = ref(true)
-/** True se esiste già una partecipazione senza `ended_at` per questo evento (utente loggato). */
+/** True se esiste già una partecipazione senza `ended_at` per questo evento/lookup (utente loggato). */
 const hasActiveParticipation = ref(false)
 /** Evita di riaprire il dialog se è già stato mostrato (stesso utente, stessa pagina). */
 let showedActiveParticipationDialog = false
@@ -25,6 +21,11 @@ let showedActiveParticipationDialog = false
 let unsubscribeAuth = () => {}
 /** @type {string | null | undefined} */
 let lastAuthUid = undefined
+
+/** Stesso valore del parametro route usato da `getEvent` / `verifyCurrentParticipation`. */
+function routeLookupStr() {
+  return String(route.params.id ?? '').trim()
+}
 
 function openNotFoundDialog() {
   global.dialog = {
@@ -41,11 +42,12 @@ function openNotFoundDialog() {
 }
 
 /**
- * All’apertura della pagina evento (e al login): se l’utente ha già una partecipazione attiva,
- * mostra subito il messaggio e dal pulsante Ok si va a `/participations/:id`.
+ * All’apertura (e al login): `verifyCurrentParticipation(str, uid)` con la stringa di route.
  */
 async function checkActiveParticipationOnOpen() {
-  if (!event.value) {
+  const key = routeLookupStr()
+
+  if (!event.value || !key) {
     hasActiveParticipation.value = false
     return
   }
@@ -56,7 +58,7 @@ async function checkActiveParticipationOnOpen() {
     return
   }
 
-  const active = await findActiveParticipationForUserEvent(u.uid, event.value.id)
+  const active = await verifyCurrentParticipation(key, u.uid)
   hasActiveParticipation.value = !!active
 
   if (active && !showedActiveParticipationDialog) {
@@ -84,9 +86,8 @@ async function load() {
   hasActiveParticipation.value = false
   showedActiveParticipationDialog = false
 
-  const raw = route.params.id
-  const param = raw != null ? String(raw) : ''
-  const ev = await findEventByQrcodeParam(param)
+  const param = routeLookupStr()
+  const ev = await getEvent(param)
   event.value = ev
   loading.value = false
 
@@ -126,9 +127,19 @@ watch(
 )
 
 async function onPartecipa() {
+  if (!event.value) return
+
   await auth.authStateReady()
   const u = auth.currentUser
-  if (!u || !event.value) {
+  if (!u) {
+    const id = routeLookupStr()
+    if (id) {
+      try {
+        localStorage.setItem(LS_KEY_QRCODE_URL, id)
+      } catch (e) {
+        console.warn('[EventView] localStorage qrcode_url', e)
+      }
+    }
     router.push({ name: 'login' })
     return
   }
@@ -137,12 +148,11 @@ async function onPartecipa() {
     return
   }
 
+  const key = routeLookupStr()
+
   global.loading++
   try {
-    const active = await findActiveParticipationForUserEvent(
-      u.uid,
-      event.value.id,
-    )
+    const active = await verifyCurrentParticipation(key, u.uid)
     if (active) {
       hasActiveParticipation.value = true
       await router.replace({

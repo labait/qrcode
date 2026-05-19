@@ -4,9 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   auth,
   getParticipationById,
-  getEventByDocumentId,
   endParticipation,
 } from '../firebase.js'
+import { getEvent } from '../utils.js'
 import { useGlobal } from '../composables/global.js'
 import EventCard from '../components/Event.vue'
 
@@ -71,7 +71,7 @@ async function load() {
     participation.value = p
     global.participation = p
 
-    const ev = await getEventByDocumentId(p.event_id)
+    const ev = await getEvent(p.event_id)
     event.value = ev
     global.event = ev
   } finally {

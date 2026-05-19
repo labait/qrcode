@@ -38,14 +38,6 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView,
-    async beforeEnter(_to, _from, next) {
-      await auth.authStateReady()
-      if (!isLoggedIn()) {
-        next({ name: 'login' })
-      } else {
-        next()
-      }
-    },
   },
   {
     path: '/login',

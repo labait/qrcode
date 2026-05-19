@@ -1,16 +1,18 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
 } from 'firebase/auth'
 import { auth, ensureUserAccount, getAccountByUid } from '../firebase.js'
+import { LS_KEY_QRCODE_URL } from '../utils.js'
 
 import { useGlobal } from '../composables/global.js'
 
 const global = useGlobal()
 const route = useRoute()
+const router = useRouter()
 
 const user = ref(null)
 
@@ -56,6 +58,29 @@ onMounted(() => {
     try {
       await ensureUserAccount(u)
       global.account = await getAccountByUid(u.uid)
+
+      let pendingId = null
+      try {
+        pendingId = localStorage.getItem(LS_KEY_QRCODE_URL)
+      } catch (e) {
+        console.warn('[Auth] localStorage get qrcode_url', e)
+      }
+      if (pendingId != null && String(pendingId).trim() !== '') {
+        try {
+          localStorage.removeItem(LS_KEY_QRCODE_URL)
+        } catch (e) {
+          console.warn('[Auth] localStorage remove qrcode_url', e)
+        }
+        const id = String(pendingId).trim()
+        await router.replace({
+          name: 'eventQrcode',
+          params: { id },
+        })
+        return
+      }
+      if (route.name === 'login') {
+        await router.replace({ name: 'home' })
+      }
     } finally {
       global.loading--
     }
@@ -68,6 +93,7 @@ onUnmounted(() => {
 
 async function logout() {
   await firebaseSignOut(auth)
+  await router.replace({ name: 'home' })
 }
 </script>
 
