@@ -3,7 +3,11 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth, createParticipation } from '../firebase.js'
-import { getEvent, verifyCurrentParticipation } from '../utils.js'
+import {
+  getEvent,
+  verifyCurrentParticipation,
+  persistCurrentPageUrlAfterLogin,
+} from '../utils.js'
 import { useGlobal } from '../composables/global.js'
 import EventCard from '../components/Event.vue'
 
@@ -120,6 +124,14 @@ onMounted(() => {
 onUnmounted(() => {
   unsubscribeAuth()
 })
+
+watch(
+  () => route.fullPath,
+  () => {
+    persistCurrentPageUrlAfterLogin()
+  },
+  { immediate: true },
+)
 
 watch(
   () => route.params.id,

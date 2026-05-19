@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth'
 import { auth, ensureUserAccount, getAccountByUid } from '../firebase.js'
+import { LS_KEY_POST_LOGIN_URL } from '../utils.js'
 
 import { useGlobal } from '../composables/global.js'
 
@@ -57,6 +58,37 @@ onMounted(() => {
     try {
       await ensureUserAccount(u)
       global.account = await getAccountByUid(u.uid)
+
+      let redirectUrl = null
+      try {
+        redirectUrl = localStorage.getItem(LS_KEY_POST_LOGIN_URL)
+      } catch (e) {
+        console.warn('[Auth] localStorage get post-login URL', e)
+      }
+
+      if (redirectUrl != null && String(redirectUrl).trim() !== '') {
+        const urlToOpen = String(redirectUrl).trim()
+        try {
+          localStorage.removeItem(LS_KEY_POST_LOGIN_URL)
+        } catch (e) {
+          console.warn('[Auth] localStorage remove post-login URL', e)
+        }
+        try {
+          const parsed = new URL(urlToOpen)
+          const sameOrigin =
+            typeof window !== 'undefined' &&
+            parsed.origin === window.location.origin
+
+          if (sameOrigin) {
+            await router.replace(parsed.pathname + parsed.search + parsed.hash)
+            return
+          }
+          window.location.replace(urlToOpen)
+          return
+        } catch (e) {
+          console.warn('[Auth] redirect post-login URL non valido:', urlToOpen, e)
+        }
+      }
 
       if (route.name === 'login') {
         await router.replace({ name: 'home' })

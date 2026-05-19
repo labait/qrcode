@@ -9,6 +9,9 @@ import {
   limit,
 } from 'firebase/firestore'
 
+/** Ripresa dopo login: URL della pagina evento QR vista dall’utente (`window.location.href`). */
+export const LS_KEY_POST_LOGIN_URL = 'post_login_return_url'
+
 const COLLECTION_EVENTS = 'events'
 const COLLECTION_PARTICIPATIONS = 'participations'
 
@@ -34,6 +37,16 @@ export function absoluteUrl(path) {
   const normalized =
     typeof path === 'string' ? (path.startsWith('/') ? path : `/${path}`) : ''
   return `${base}${normalized}`
+}
+
+/** Salva l’URL corrente (pagina QR) per il redirect dopo l’accesso. */
+export function persistCurrentPageUrlAfterLogin() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(LS_KEY_POST_LOGIN_URL, window.location.href)
+  } catch (e) {
+    console.warn('[utils] persistCurrentPageUrlAfterLogin', e)
+  }
 }
 
 /**
