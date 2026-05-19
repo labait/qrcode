@@ -202,22 +202,23 @@ async function onPartecipa() {
     </p>
 
     <template v-else-if="event">
-      <EventCard :event="event" />
-
-      <a
-        v-if="!hasActiveParticipation"
-        href="#"
-        class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
-        @click.prevent="onPartecipa"
-      >
-        Partecipa
-      </a>
-      <p
-        v-else
-        class="max-w-md text-center text-base opacity-90"
-      >
-        Hai già una partecipazione attiva per questo evento.
-      </p>
+      <div class="flex w-full max-w-lg flex-col gap-6">
+        <a
+          v-if="!hasActiveParticipation"
+          href="#"
+          class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
+          @click.prevent="onPartecipa"
+        >
+          Partecipa
+        </a>
+        <p
+          v-else
+          class="max-w-md text-center text-base opacity-90"
+        >
+          Hai già una partecipazione attiva per questo evento.
+        </p>
+        <EventCard :event="event" />
+      </div>
     </template>
 
     <div
