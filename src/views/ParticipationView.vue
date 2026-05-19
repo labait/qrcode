@@ -116,7 +116,7 @@ watch(
       <div class="flex w-full max-w-lg flex-col gap-6">
         <a
           href="#"
-          class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
+          class="btn-secondary inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
           @click.prevent="finePartecipazione"
         >
           Fine partecipazione

@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import { useGlobal } from '../composables/global.js'
 import { isAdmin } from '../firebase.js'
 
@@ -11,17 +12,21 @@ const visible = computed(() => isAdmin(global.account))
 <template>
   <nav
     v-if="visible"
-    class="pointer-events-auto fixed bottom-4 left-1/2 z-40 w-[min(calc(100vw-2rem),42rem)] -translate-x-1/2 px-4"
+    class="pointer-events-auto fixed bottom-4 left-4 z-40"
     aria-label="Barra amministratore"
   >
     <div
-      class="flex items-center justify-center rounded-2xl border border-white/10 bg-neutral-900/70 px-4 py-3 shadow-lg backdrop-blur-md dark:bg-neutral-950/75"
+      class="flex items-center gap-2 rounded-lg px-4 py-3 shadow-lg bg-black/80"
     >
+      <Cog6ToothIcon
+        class="size-5 shrink-0 text-neutral-950 dark:text-white"
+        aria-hidden="true"
+      />
       <RouterLink
         to="/admin/events"
-        class="rounded-md px-3  text-base  text-white/95 underline-offset-4 transition hover:text-white hover:underline"
+        class="rounded-md px-1 text-base font-medium text-neutral-950 underline-offset-4 transition hover:underline dark:text-white"
       >
-        Eventi QR
+        Events
       </RouterLink>
     </div>
   </nav>
