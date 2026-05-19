@@ -13,7 +13,7 @@ const access = getAccessProviders()
         Accedi
       </h1>
       <p class="text-base opacity-90">
-        Utilizza un tuo account per accedere all'applicazione.
+        Utilizza il tuo account per accedere.
       </p>
     </header>
 

@@ -45,7 +45,7 @@ onMounted(async () => {
     class="flex min-h-[calc(100vh-30rem)] w-full flex-1 flex-col items-center justify-center px-6 text-center"
   >
     <p class="max-w-md text-lg">
-      È necessario scansionare un codice per accedere all'App
+      Scansionare un QR code
     </p>
   </div>
 </template>

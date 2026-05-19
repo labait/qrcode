@@ -31,6 +31,14 @@ function routeLookupStr() {
   return String(route.params.id ?? '').trim()
 }
 
+/** Salva l’URL QR in localStorage solo se l’utente non è loggato e siamo ancora sulla route evento. */
+async function maybePersistQrUrlForAnonymousVisit() {
+  await auth.authStateReady()
+  if (auth.currentUser) return
+  if (route.name !== 'eventQrcode') return
+  persistCurrentPageUrlAfterLogin()
+}
+
 function openNotFoundDialog() {
   global.dialog = {
     title: 'Errore',
@@ -128,7 +136,7 @@ onUnmounted(() => {
 watch(
   () => route.fullPath,
   () => {
-    persistCurrentPageUrlAfterLogin()
+    void maybePersistQrUrlForAnonymousVisit()
   },
   { immediate: true },
 )

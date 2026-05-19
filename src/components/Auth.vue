@@ -66,13 +66,14 @@ onMounted(() => {
         console.warn('[Auth] localStorage get post-login URL', e)
       }
 
+      try {
+        localStorage.removeItem(LS_KEY_POST_LOGIN_URL)
+      } catch (e) {
+        console.warn('[Auth] localStorage remove post-login URL', e)
+      }
+
       if (redirectUrl != null && String(redirectUrl).trim() !== '') {
         const urlToOpen = String(redirectUrl).trim()
-        try {
-          localStorage.removeItem(LS_KEY_POST_LOGIN_URL)
-        } catch (e) {
-          console.warn('[Auth] localStorage remove post-login URL', e)
-        }
         try {
           const parsed = new URL(urlToOpen)
           const sameOrigin =
@@ -115,13 +116,7 @@ async function logout() {
       class="mx-auto flex w-full max-w-5xl justify-center gap-3 px-4"
     >
       <template v-if="!user">
-        <RouterLink
-          v-if="showAccediLink"
-          to="/login"
-          class="bg-primary inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-medium transition"
-        >
-          Esegui l'accesso
-        </RouterLink>
+        
       </template>
       <template v-else>
         <div

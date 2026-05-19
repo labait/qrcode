@@ -39,7 +39,10 @@ export function absoluteUrl(path) {
   return `${base}${normalized}`
 }
 
-/** Salva l’URL corrente (pagina QR) per il redirect dopo l’accesso. */
+/**
+ * Salva `window.location.href` in `LS_KEY_POST_LOGIN_URL` per il ripristino dopo login.
+ * Chiamare solo con utente non loggato (EventView) per non riscrivere dopo il redirect post-accesso.
+ */
 export function persistCurrentPageUrlAfterLogin() {
   if (typeof window === 'undefined') return
   try {
