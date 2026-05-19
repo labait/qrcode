@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+/**
+ * Elementi cliccativi: cursore chiaro dopo il Preflight Tailwind sui pulsanti.
+ * I link sono coperti per coerenza (RouterLink incluso).
+ */
+@layer base {
+  a[href] {
+    cursor: pointer;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
