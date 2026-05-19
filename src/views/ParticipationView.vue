@@ -8,7 +8,7 @@ import {
 } from '../firebase.js'
 import { getEvent } from '../utils.js'
 import { useGlobal } from '../composables/global.js'
-import EventCard from '../components/Event.vue'
+import Event from '../components/Event.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -121,7 +121,7 @@ watch(
         >
           Fine partecipazione
         </a>
-        <EventCard :event="event" />
+        <Event :event="event" />
       </div>
     </template>
 

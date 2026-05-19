@@ -9,7 +9,7 @@ import {
   persistCurrentPageUrlAfterLogin,
 } from '../utils.js'
 import { useGlobal } from '../composables/global.js'
-import EventCard from '../components/Event.vue'
+import Event from '../components/Event.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -259,7 +259,10 @@ async function onPartecipa() {
         >
           Hai già una partecipazione attiva per questo evento.
         </p>
-        <EventCard :event="event" />
+        <Event
+          v-if="firebaseUser"
+          :event="event"
+        />
       </div>
     </template>
 
