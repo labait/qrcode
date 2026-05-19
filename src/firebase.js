@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -19,6 +19,21 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 
+/**
+ * Tenant Azure AD (app single-tenant). Senza questo, MS usa `/common` e fallisce con
+ * AADSTS50194 (“not configured as a multi-tenant application”).
+ */
+export const MICROSOFT_TENANT_ID = '2d7b4e34-4878-40c3-afd4-95963d5728fd'
+
+/** Provider Microsoft (abilita "Microsoft" in Firebase Console → Authentication). */
+export const microsoftProvider = new OAuthProvider('microsoft.com')
+microsoftProvider.addScope('email')
+microsoftProvider.addScope('openid')
+microsoftProvider.addScope('profile')
+microsoftProvider.setCustomParameters({
+  tenant: MICROSOFT_TENANT_ID,
+})
+
 /** Analytics requires a browser environment. */
 export const analytics =
   typeof window !== 'undefined' ? getAnalytics(app) : null
@@ -36,6 +51,15 @@ const LOG = '[accounts]'
 export function isAdmin(account) {
   const roles = account?.roles
   return Array.isArray(roles) && roles.includes('admin')
+}
+
+/**
+ * Indica se c'è un utente Firebase Auth nella sessione corrente.
+ * Dopo navigazione/ricarico attendi prima `await auth.authStateReady()` perché `currentUser` può essere inizialmente null.
+ * @returns {boolean}
+ */
+export function isLoggedIn() {
+  return auth.currentUser != null
 }
 
 /** @param {string | undefined} displayName */

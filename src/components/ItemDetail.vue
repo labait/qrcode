@@ -43,7 +43,7 @@ onMounted(loadItem)
 		<article v-else-if="item" class="space-y-6">
 			<router-link
 				:to="{ name: 'home' }"
-				class="inline-block text-sm font-medium text-neutral-700 hover:text-neutral-900"
+				class="inline-block text-base font-medium text-neutral-700 hover:text-neutral-900"
 			>
 				← Torna alla home
 			</router-link>

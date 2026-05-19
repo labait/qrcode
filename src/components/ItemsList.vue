@@ -33,7 +33,7 @@ onMounted(loadItems)
 <template>
 	<section class="w-full space-y-4">
 		<h2 class="text-xl font-semibold">Items</h2>
-		<p v-if="items.length === 0" class="text-sm text-neutral-500">
+		<p v-if="items.length === 0" class="text-base text-neutral-500">
 			Nessun elemento trovato nella collezione items.
 		</p>
 
@@ -53,7 +53,7 @@ onMounted(loadItems)
 					/>
 				</figure>
 				<h3 class="font-medium ">{{ item.name || item.title || item.id }}</h3>
-				<p class="mt-1 text-sm text-neutral-600">{{ item.description }}</p>
+				<p class="mt-1 text-base text-neutral-600">{{ item.description }}</p>
 			</article>
 		</div>
 	</section>
