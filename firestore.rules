@@ -13,6 +13,7 @@ service cloud.firestore {
       return /databases/$(database)/documents/accounts/$(request.auth.uid);
     }
 
+    /** Allineato a `isAdmin()` sul client: `roles` deve contenere la stringa "admin". */
     function isAdmin() {
       return signedIn() &&
         exists(currentAccountPath()) &&
@@ -21,15 +22,11 @@ service cloud.firestore {
         get(currentAccountPath()).data.roles.hasAny(['admin']);
     }
 
-    function ownsAccount() {
+    function ownsAccountDoc() {
       return signedIn() &&
         resource != null &&
         resource.data.keys().hasAny(['uid']) &&
         resource.data.uid == request.auth.uid;
-    }
-
-    function accountRolesUntouched() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['roles']);
     }
 
     function uidUnchanged() {
@@ -38,58 +35,76 @@ service cloud.firestore {
         request.resource.data.uid == resource.data.uid;
     }
 
-    function ownsItem() {
-      return signedIn() &&
-        resource != null &&
-        resource.data.keys().hasAny(['uid']) &&
-        resource.data.uid == request.auth.uid;
+    /** Il proprietario non può modificare il campo roles. */
+    function accountRolesUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['roles']);
     }
 
-    function createsOwnItem() {
-      return signedIn() &&
-        request.resource.data.keys().hasAny(['uid']) &&
-        request.resource.data.uid == request.auth.uid;
+    /**
+     * Il proprietario può modificare solo firstname e lastname (oltre al vincolo su roles).
+     * uid, roles, email, name e gli altri campi restano invariati lato proprietario non admin.
+     */
+    function ownerAccountOnlyProfileNames() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstname', 'lastname']);
     }
 
     match /accounts/{accountId} {
-      // Due regole separate (OR): la prima non usa resource → ok su documento assente (getDoc prima del setDoc).
-      allow read: if signedIn() && request.auth.uid == accountId;
+      // Proprietario: legge solo il proprio documento ({uid}). Admin: qualsiasi account.
+      allow read: if signedIn() &&
+        (request.auth.uid == accountId || isAdmin());
 
-      allow read: if isAdmin();
-
-      // Bootstrap account client: uid, roles, name, email (email coerente col token Auth).
       allow create: if isAdmin() || (
           signedIn() &&
           accountId == request.auth.uid &&
-          request.resource.data.keys().hasAll(['uid', 'roles', 'name', 'email']) &&
+          request.resource.data.keys().hasAll([
+            'uid',
+            'roles',
+            'name',
+            'email',
+            'firstname',
+            'lastname'
+          ]) &&
           request.resource.data.uid == request.auth.uid &&
           request.resource.data.roles is list &&
           !request.resource.data.roles.hasAny(['admin']) &&
           request.resource.data.name is string &&
           request.resource.data.email is string &&
+          request.resource.data.firstname is string &&
+          request.resource.data.lastname is string &&
           request.auth.token.email == request.resource.data.email
         );
 
       allow update: if isAdmin() ||
         (
-          ownsAccount() &&
+          ownsAccountDoc() &&
           uidUnchanged() &&
-          accountRolesUntouched()
+          accountRolesUntouched() &&
+          ownerAccountOnlyProfileNames()
         );
 
-      allow delete: if ownsAccount() || isAdmin();
+      /** Solo gli amministratori possono cancellare account. */
+      allow delete: if isAdmin();
     }
 
+    /** Tutti leggono gli item (anche non autenticati); modifiche solo admin. */
     match /items/{itemId} {
-      // Everyone can read items
       allow read: if true;
 
-      // Only logged-in users with matching uid can create or update their own items
-      allow create: if createsOwnItem();
-      allow update: if ownsItem();
+      allow create, update, delete: if isAdmin();
+    }
 
-      // Admins can modify or delete any item
-      allow update, delete: if isAdmin();
+    /** Stesso schema degli item. */
+    match /events/{eventId} {
+      allow read: if true;
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    /** Regole conservative (come items): pubblico può leggere; scrittura solo admin. */
+    match /qrcodes/{qrcodeId} {
+      allow read: if true;
+
+      allow create, update, delete: if isAdmin();
     }
   }
 }

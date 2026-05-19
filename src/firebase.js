@@ -1,16 +1,16 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDYCWCBVVsp0zkRMqukAJI4pZXJElEn34Y',
-  authDomain: 'vue-firebase-template-24856.firebaseapp.com',
-  projectId: 'vue-firebase-template-24856',
-  storageBucket: 'vue-firebase-template-24856.firebasestorage.app',
-  messagingSenderId: '246919884058',
-  appId: '1:246919884058:web:da4ee96ac1b1e35818d0a3',
-  measurementId: 'G-W8TSYCGZZ5',
+  apiKey: "AIzaSyAOr5pEB5kmEKXlRgKaPJuLJh_wx_mVLco",
+  authDomain: "floop-6b5b3.firebaseapp.com",
+  projectId: "floop-6b5b3",
+  storageBucket: "floop-6b5b3.firebasestorage.app",
+  messagingSenderId: "60356315860",
+  appId: "1:60356315860:web:57c56495daf2a8ae178941",
+  measurementId: "G-81PRZ0PZDD"
 }
 
 const app = initializeApp(firebaseConfig)
@@ -28,7 +28,36 @@ const ACCOUNTS = 'accounts'
 const LOG = '[accounts]'
 
 /**
- * Crea `accounts/{uid}` se mancante, altrimenti allinea sempre name ed email al profilo Auth.
+ * Determina se l'account è amministratore (`roles` contiene `"admin"`).
+ * Usa sempre questo helper dall'app — allineato a `isAdmin()` in `firestore.rules`.
+ * @param {{ roles?: string[] } | null | undefined} account
+ * @returns {boolean}
+ */
+export function isAdmin(account) {
+  const roles = account?.roles
+  return Array.isArray(roles) && roles.includes('admin')
+}
+
+/** @param {string | undefined} displayName */
+function splitDisplayName(displayName) {
+  const raw = (displayName ?? '').trim()
+  if (!raw) {
+    return { firstname: '', lastname: '' }
+  }
+  const spaceIndex = raw.indexOf(' ')
+  if (spaceIndex === -1) {
+    return { firstname: raw, lastname: '' }
+  }
+  return {
+    firstname: raw.slice(0, spaceIndex),
+    lastname: raw.slice(spaceIndex + 1).trim(),
+  }
+}
+
+/**
+ * Crea `accounts/{uid}` se mancante (nome/email da Auth + firstname/lastname).
+ * Se il documento esiste già, non aggiorna nulla sul client: le regole Firestore
+ * consentono al proprietario di modificare solo `firstname` e `lastname`.
  * @returns {Promise<boolean>} true se ok, false in caso di errore o utente assente
  */
 export async function ensureUserAccount(user) {
@@ -41,6 +70,7 @@ export async function ensureUserAccount(user) {
   const ref = doc(db, ACCOUNTS, user.uid)
   const name = user.displayName ?? ''
   const email = user.email ?? ''
+  const { firstname, lastname } = splitDisplayName(name ?? '')
 
   try {
     // Allinea il token Auth a Firestore (evita permission-denied appena dopo il login)
@@ -48,19 +78,7 @@ export async function ensureUserAccount(user) {
 
     const snap = await getDoc(ref)
     if (snap.exists()) {
-      const prev = snap.data()
-      const prevName = prev?.name ?? ''
-      const prevEmail = prev?.email ?? ''
-      if (prevName === name && prevEmail === email) {
-        console.info(`${LOG} name/email already in sync`, { path })
-        return true
-      }
-      await updateDoc(ref, { name, email })
-      console.info(`${LOG} name/email updated`, {
-        path,
-        name,
-        email,
-      })
+      console.info(`${LOG} account already exists, skip client-side sync`, { path })
       return true
     }
 
@@ -69,6 +87,8 @@ export async function ensureUserAccount(user) {
       roles: [],
       name,
       email,
+      firstname,
+      lastname,
     }
     await setDoc(ref, accountData)
     console.info(`${LOG} document created`, {
@@ -85,7 +105,7 @@ export async function ensureUserAccount(user) {
       message,
       hint:
         code === 'permission-denied'
-          ? 'Firestore rules: pubblica firestore.rules; create (uid, roles, name, email) o update name/email come proprietario.'
+          ? 'Firestore rules: create con uid/roles/name/email/firstname/lastname; aggiorna solo firstname e lastname se non sei admin.'
           : code === 'unavailable'
             ? 'Network / Firestore API. Check connection and that Firestore is enabled for the project.'
             : undefined,
