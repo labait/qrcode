@@ -87,7 +87,7 @@ function fmt(ts) {
       Nessun evento in collezione.
     </p>
 
-    <div v-else class="grid gap-8 sm:grid-cols-1 md:grid-cols-2">
+    <div v-else class="grid gap-8 grid-cols-1 lg:grid-cols-2">
       <article
         v-for="ev in events"
         :key="ev.id"

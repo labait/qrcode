@@ -1,5 +1,6 @@
 <script setup>
-import ConnectMicrosoft from '../components/connect_microsoft.vue'
+import ConnectGoogle from '../components/ConnectGoogle.vue'
+import ConnectMicrosoft from '../components/ConnectMicrosoft.vue'
 </script>
 
 <template>
@@ -13,7 +14,8 @@ import ConnectMicrosoft from '../components/connect_microsoft.vue'
       </p>
     </header>
 
-    <div class="w-full space-y-3">
+    <div class="flex w-full flex-col gap-3">
+      <ConnectGoogle />
       <ConnectMicrosoft />
     </div>
   </div>
