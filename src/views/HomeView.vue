@@ -42,7 +42,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="flex min-h-[calc(100vh-30rem)] w-full flex-1 flex-col items-center justify-center px-6 text-center"
+    class="text-center"
   >
     <p class="max-w-md text-lg">
       Scansionare un QR code
