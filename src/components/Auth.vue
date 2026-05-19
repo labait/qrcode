@@ -116,13 +116,7 @@ async function logout() {
       class="mx-auto flex w-full max-w-5xl justify-center gap-3 px-4"
     >
       <template v-if="!user">
-        <RouterLink
-          v-if="showAccediLink"
-          to="/login"
-          class="bg-primary inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-medium transition"
-        >
-          Esegui l'accesso
-        </RouterLink>
+ 
       </template>
       <template v-else>
         <div

@@ -17,10 +17,14 @@ const global = useGlobal()
 
 const event = ref(null)
 const loading = ref(true)
+/** Utente Firebase (null se anonimo); aggiornato da `onAuthStateChanged`. */
+const firebaseUser = ref(null)
 /** True se esiste già una partecipazione senza `ended_at` per questo evento/lookup (utente loggato). */
 const hasActiveParticipation = ref(false)
 /** Evita di riaprire il dialog se è già stato mostrato (stesso utente, stessa pagina). */
 let showedActiveParticipationDialog = false
+/** Dialog “serve accedere” una sola volta per caricamento della pagina evento (anonimo). */
+let showedLoginRequiredDialog = false
 
 let unsubscribeAuth = () => {}
 /** @type {string | null | undefined} */
@@ -37,6 +41,36 @@ async function maybePersistQrUrlForAnonymousVisit() {
   if (auth.currentUser) return
   if (route.name !== 'eventQrcode') return
   persistCurrentPageUrlAfterLogin()
+}
+
+/** Salva URL corrente e mostra dialog; OK → `/login`. */
+function openLoginRequiredDialogToLogin() {
+  persistCurrentPageUrlAfterLogin()
+  global.dialog = {
+    title: 'Accesso richiesto',
+    content: 'È necessario effettuare l\'accesso',
+    onOk: async () => {
+      global.dialog = null
+      await router.push({ name: 'login' })
+    },
+    onCancel: () => {
+      global.dialog = null
+    },
+  }
+}
+
+/**
+ * Visitatore anonimo su `/qrcodes/:id` con evento valido: salva URL e chiede accesso.
+ */
+async function maybeShowLoginRequiredForAnonymous() {
+  await auth.authStateReady()
+  if (auth.currentUser) return
+  if (route.name !== 'eventQrcode') return
+  if (!event.value) return
+  if (showedLoginRequiredDialog) return
+
+  showedLoginRequiredDialog = true
+  openLoginRequiredDialogToLogin()
 }
 
 function openNotFoundDialog() {
@@ -97,6 +131,7 @@ async function load() {
   event.value = null
   hasActiveParticipation.value = false
   showedActiveParticipationDialog = false
+  showedLoginRequiredDialog = false
 
   const param = routeLookupStr()
   const ev = await getEvent(param)
@@ -109,24 +144,31 @@ async function load() {
   }
 
   await checkActiveParticipationOnOpen()
+  await maybeShowLoginRequiredForAnonymous()
 }
 
 function goHome() {
   router.replace({ name: 'home' })
 }
 
-onMounted(() => {
-  load()
+onMounted(async () => {
+  await auth.authStateReady()
+  firebaseUser.value = auth.currentUser
+
   unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    firebaseUser.value = user
     const uid = user?.uid ?? null
     if (uid !== lastAuthUid) {
       showedActiveParticipationDialog = false
+      showedLoginRequiredDialog = false
       lastAuthUid = uid
     }
     if (event.value) {
       void checkActiveParticipationOnOpen()
     }
   })
+
+  load()
 })
 
 onUnmounted(() => {
@@ -152,7 +194,7 @@ async function onPartecipa() {
   await auth.authStateReady()
   const u = auth.currentUser
   if (!u) {
-    router.push({ name: 'login' })
+    openLoginRequiredDialogToLogin()
     return
   }
 
@@ -204,7 +246,7 @@ async function onPartecipa() {
     <template v-else-if="event">
       <div class="flex w-full max-w-lg flex-col gap-6">
         <a
-          v-if="!hasActiveParticipation"
+          v-if="firebaseUser && !hasActiveParticipation"
           href="#"
           class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
           @click.prevent="onPartecipa"
@@ -212,7 +254,7 @@ async function onPartecipa() {
           Partecipa
         </a>
         <p
-          v-else
+          v-else-if="firebaseUser && hasActiveParticipation"
           class="max-w-md text-center text-base opacity-90"
         >
           Hai già una partecipazione attiva per questo evento.
