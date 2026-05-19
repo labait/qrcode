@@ -4,6 +4,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   OAuthProvider,
+  browserPopupRedirectResolver,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
@@ -66,10 +67,14 @@ export function shouldUseOAuthRedirect() {
   return false
 }
 
-/** Da chiamare all’avvio dell’app dopo un `signInWithRedirect` (consuma il risultato dalla URL/session). */
+/**
+ * Consuma il redirect OAuth (Microsoft/Google). Su Safari/WebKit va usato lo stesso
+ * `browserPopupRedirectResolver` passato a `signInWithRedirect`, altrimenti spesso si ottiene
+ * `auth/no-auth-event` e l’utente resta su `/login`.
+ */
 export async function consumeAuthRedirectResult() {
   try {
-    await getRedirectResult(auth)
+    await getRedirectResult(auth, browserPopupRedirectResolver)
   } catch (err) {
     const code = err?.code ?? err?.name
     if (code === 'auth/no-auth-event') return
@@ -81,9 +86,22 @@ export async function consumeAuthRedirectResult() {
   }
 }
 
+/**
+ * Dopo un redirect OAuth: consuma il risultato poi attendi l’init Auth (currentUser aggiornato).
+ * Usare prima di guard router / mount dove si legge `auth.currentUser`.
+ */
+export async function ensureAuthReady() {
+  await consumeAuthRedirectResult()
+  await auth.authStateReady()
+}
+
 export async function signInWithGooglePreferred() {
   if (shouldUseOAuthRedirect()) {
-    await signInWithRedirect(auth, googleProvider)
+    await signInWithRedirect(
+      auth,
+      googleProvider,
+      browserPopupRedirectResolver,
+    )
     return
   }
   await signInWithPopup(auth, googleProvider)
@@ -91,7 +109,11 @@ export async function signInWithGooglePreferred() {
 
 export async function signInWithMicrosoftPreferred() {
   if (shouldUseOAuthRedirect()) {
-    await signInWithRedirect(auth, microsoftProvider)
+    await signInWithRedirect(
+      auth,
+      microsoftProvider,
+      browserPopupRedirectResolver,
+    )
     return
   }
   await signInWithPopup(auth, microsoftProvider)
