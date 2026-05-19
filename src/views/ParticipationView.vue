@@ -107,7 +107,7 @@ watch(
   <div class="flex w-full flex-col items-center gap-8 px-4 py-6">
     <p
       v-if="!ready"
-      class="text-base text-neutral-500"
+      class="text-base opacity-80"
     >
       Caricamento…
     </p>
@@ -116,7 +116,7 @@ watch(
       <EventCard :event="event" />
       <a
         href="#"
-        class="cursor-pointer text-base font-medium text-blue-600 underline underline-offset-4 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
         @click.prevent="finePartecipazione"
       >
         Fine partecipazione
@@ -125,7 +125,7 @@ watch(
 
     <p
       v-else
-      class="text-center text-base text-neutral-500"
+      class="text-center text-base opacity-80"
     >
       Evento non disponibile.
     </p>

@@ -43,7 +43,7 @@ onMounted(loadItem)
 		<article v-else-if="item" class="space-y-6">
 			<router-link
 				:to="{ name: 'home' }"
-				class="inline-block text-base font-medium text-neutral-700 hover:text-neutral-900"
+				class="inline-block text-base font-medium hover:underline"
 			>
 				← Torna alla home
 			</router-link>
@@ -60,7 +60,7 @@ onMounted(loadItem)
 			<!-- Content -->
 			<div class="space-y-4 mt-4">
 				<h1 class="text-3xl font-bold">{{ item.name || item.title }}</h1>
-				<p class="text-lg text-neutral-700">{{ item.description }}</p>
+				<p class="text-lg">{{ item.description }}</p>
 			</div>
 		</article>
 	</div>

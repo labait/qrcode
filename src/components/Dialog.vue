@@ -29,15 +29,17 @@ async function handleCancel() {
     v-if="global.dialog?.content != null"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
   >
-    <div class="w-full max-w-[90vw] sm:max-w-[50vw] rounded-lg bg-white p-6 shadow-xl">
+    <div
+      class="w-full max-w-[90vw] sm:max-w-[50vw] rounded-lg bg-white p-6 text-black shadow-xl"
+    >
       <h2
         v-if="global.dialog?.title"
-        class="mb-2 text-xl font-semibold text-neutral-900"
+        class="mb-2 text-xl font-semibold"
       >
         {{ global.dialog.title }}
       </h2>
 
-      <p class="text-neutral-700 whitespace-pre-line">
+      <p class="whitespace-pre-line">
         {{ global.dialog.content }}
       </p>
 

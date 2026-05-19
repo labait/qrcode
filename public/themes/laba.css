@@ -1,0 +1,47 @@
+/**
+ * Tema istanza "laba".
+ * Variabili: --theme-page-bg, --theme-default-text, --theme-accent
+ * Sblocca il body: il bundle imposta `body { display: none }` finché non è caricato questo file.
+ */
+:root {
+  --theme-page-bg: #ff722f;
+  --theme-default-text: #ffffff;
+  --theme-accent: #8023ff;
+}
+
+html {
+  background-color: var(--theme-page-bg);
+  color: var(--theme-default-text);
+}
+
+body {
+  display: block;
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--theme-page-bg);
+  color: var(--theme-default-text);
+}
+
+#app {
+  min-height: 100vh;
+  background-color: var(--theme-page-bg);
+  color: var(--theme-default-text);
+}
+
+/* Header: logo LABA al posto del wordmark "floop" (nessuna logica JS). */
+.app-header-brand-logo {
+  display: block;
+  width: auto;
+  /* +40% vs h-10 / sm:h-11 del markup (2.5rem → 3.5rem, 2.75rem → 3.85rem) */
+  height: calc(2.5rem * 1.4);
+}
+
+@media (min-width: 640px) {
+  .app-header-brand-logo {
+    height: calc(2.75rem * 1.4);
+  }
+}
+
+.app-header-brand-wordmark {
+  display: none;
+}

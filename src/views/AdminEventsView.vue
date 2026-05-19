@@ -71,18 +71,18 @@ function fmt(ts) {
 <template>
   <div class="flex w-full max-w-5xl flex-col gap-8 px-4 pb-36 pt-2">
     <header class="space-y-1 text-center">
-      <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+      <h1 class="text-2xl font-semibold">
         Eventi
       </h1>
-      <p class="text-base text-neutral-600 dark:text-neutral-400">
+      <p class="text-base">
         QR codice e attributi pubblici della collezione
-        <span class="font-mono text-sm">events</span>
+        <span class="font-mono">events</span>
       </p>
     </header>
 
     <p
       v-if="events.length === 0"
-      class="text-center text-neutral-500"
+      class="text-center opacity-90"
     >
       Nessun evento in collezione.
     </p>
@@ -91,10 +91,10 @@ function fmt(ts) {
       <article
         v-for="ev in events"
         :key="ev.id"
-        class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900"
+        class="rounded-2xl bg-white/40 p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900"
       >
         <div class="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div class="shrink-0 rounded-lg bg-neutral-50 p-2 ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
+          <div class="shrink-0 rounded-lg p-2 ring-1 ring-black/10">
             <img
               v-if="qrDataUrlById[ev.id]"
               :src="qrDataUrlById[ev.id]"
@@ -104,7 +104,7 @@ function fmt(ts) {
             />
             <div
               v-else
-              class="flex h-[180px] w-[180px] items-center justify-center text-sm text-neutral-500"
+              class="flex h-[180px] w-[180px] items-center justify-center opacity-75"
             >
               QR…
             </div>
@@ -116,13 +116,13 @@ function fmt(ts) {
                 :href="eventPublicUrl(ev.id)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="min-w-0 flex-1 break-all text-xs font-mono leading-snug text-blue-700 hover:underline dark:text-blue-400"
+                class="min-w-0 flex-1 break-all  font-mono leading-snug hover:underline"
               >
                 {{ eventPublicUrl(ev.id) }}
               </a>
               <button
                 type="button"
-                class="shrink-0 rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+                class="shrink-0 rounded-md border border-neutral-300 bg-neutral-50 px-2 py-1  font-medium text-neutral-800 hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
                 aria-label="Copia link negli appunti"
                 @click="copyLink(ev.id, eventPublicUrl(ev.id))"
               >
@@ -132,7 +132,7 @@ function fmt(ts) {
 
             <dl class="space-y-2 text-base text-neutral-800 dark:text-neutral-200">
               <div class="flex flex-col gap-0.5">
-                <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <dt class=" font-medium uppercase tracking-wide opacity-75">
                   title
                 </dt>
                 <dd class="leading-snug">
@@ -140,7 +140,7 @@ function fmt(ts) {
                 </dd>
               </div>
               <div class="flex flex-col gap-0.5">
-                <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <dt class=" font-medium uppercase tracking-wide opacity-75">
                   description
                 </dt>
                 <dd class="whitespace-pre-line leading-snug">
@@ -148,7 +148,7 @@ function fmt(ts) {
                 </dd>
               </div>
               <div class="flex flex-col gap-0.5">
-                <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <dt class=" font-medium uppercase tracking-wide opacity-75">
                   valid_from
                 </dt>
                 <dd>
@@ -156,7 +156,7 @@ function fmt(ts) {
                 </dd>
               </div>
               <div class="flex flex-col gap-0.5">
-                <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <dt class=" font-medium uppercase tracking-wide opacity-75">
                   valid_to
                 </dt>
                 <dd>

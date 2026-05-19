@@ -184,7 +184,7 @@ async function onPartecipa() {
   <div class="flex w-full flex-col items-center gap-8 px-4 py-6">
     <p
       v-if="loading"
-      class="text-base text-neutral-600 dark:text-neutral-400"
+      class="text-base opacity-85"
     >
       Caricamento…
     </p>
@@ -195,14 +195,14 @@ async function onPartecipa() {
       <a
         v-if="!hasActiveParticipation"
         href="#"
-        class="cursor-pointer rounded-lg border border-blue-600 bg-blue-600 px-6 py-3 text-center text-base font-medium text-white transition hover:bg-blue-700"
+        class="bg-primary inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-6 py-3 text-base font-medium transition"
         @click.prevent="onPartecipa"
       >
         Partecipa
       </a>
       <p
         v-else
-        class="max-w-md text-center text-base text-neutral-600 dark:text-neutral-400"
+        class="max-w-md text-center text-base opacity-90"
       >
         Hai già una partecipazione attiva per questo evento.
       </p>
@@ -212,7 +212,7 @@ async function onPartecipa() {
       v-else
       class="flex max-w-md flex-col items-center gap-4 text-center"
     >
-      <p class="text-base text-neutral-700 dark:text-neutral-300">
+      <p class="text-base">
         codice non trovato
       </p>
       <button

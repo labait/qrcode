@@ -37,12 +37,12 @@ watch(() => props.content, renderQr, { immediate: true })
   <div class="flex flex-col items-center gap-3">
     <div
       v-if="dataUrl"
-      class="rounded-lg bg-white p-2 ring-1 ring-neutral-200 dark:bg-neutral-900 dark:ring-neutral-700"
+      class=""
     >
       <img
         :src="dataUrl"
         alt="Codice QR"
-        class="h-[200px] w-[200px] object-contain"
+        class="h-[300px] w-[300px] object-contain"
         width="200"
         height="200"
         loading="lazy"
@@ -50,7 +50,7 @@ watch(() => props.content, renderQr, { immediate: true })
     </div>
     <p
       v-if="content"
-      class="max-w-full break-all text-center text-xs font-mono text-neutral-600 dark:text-neutral-400"
+      class="max-w-full break-all text-center  font-mono opacity-85"
     >
       {{ content }}
     </p>

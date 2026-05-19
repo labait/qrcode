@@ -98,20 +98,22 @@ async function logout() {
 </script>
 
 <template>
-  <header class="w-full min-h-[10rem]">
-    <div class="mx-auto flex w-full justify-center gap-3">
+  <header class="w-full shrink-0 py-2">
+    <div
+      class="mx-auto flex w-full max-w-5xl justify-center gap-3 px-4"
+    >
       <template v-if="!user">
         <RouterLink
           v-if="showAccediLink"
           to="/login"
-          class="text-base font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+          class="bg-primary inline-flex items-center justify-center rounded-lg px-5 py-2 text-base font-medium transition"
         >
-          Accedi con
+          Esegui l'accesso
         </RouterLink>
       </template>
       <template v-else>
         <div
-          class="flex flex-col items-center gap-3 text-center"
+          class="flex max-w-full flex-nowrap items-center gap-2 sm:gap-3"
           role="group"
           aria-label="Profilo utente"
         >
@@ -119,25 +121,27 @@ async function logout() {
             v-if="avatarUrl"
             :src="avatarUrl"
             :alt="user.displayName || user.email || 'Utente'"
-            class="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-neutral-200 dark:ring-neutral-700"
+            class="size-10 shrink-0 rounded-full object-cover ring-2 ring-neutral-200 dark:ring-neutral-700 sm:size-11"
             referrerpolicy="no-referrer"
-            width="56"
-            height="56"
+            width="40"
+            height="40"
             loading="lazy"
           />
           <div
             v-else
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-neutral-600 to-neutral-800 text-lg font-semibold text-white ring-2 ring-neutral-300 dark:from-neutral-500 dark:to-neutral-700 dark:ring-neutral-600"
+            class="flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-neutral-600 to-neutral-800 text-sm font-semibold text-white ring-2 ring-neutral-300 sm:size-11 sm:text-base dark:from-neutral-500 dark:to-neutral-700 dark:ring-neutral-600"
             aria-hidden="true"
           >
             {{ initials }}
           </div>
-          <span class="max-w-[16rem] text-base font-medium leading-snug text-neutral-900 dark:text-neutral-100">
+          <span
+            class="min-w-0 max-w-[14rem] shrink truncate whitespace-nowrap text-left text-base font-medium sm:max-w-xs"
+          >
             {{ user.displayName || user.email || 'Utente' }}
           </span>
           <button
             type="button"
-            class="inline-flex text-base font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+            class="inline-flex shrink-0 whitespace-nowrap text-base font-medium underline-offset-2 hover:underline"
             @click="logout"
           >
             Logout
