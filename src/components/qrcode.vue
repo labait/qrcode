@@ -52,7 +52,6 @@ watch(() => props.content, renderQr, { immediate: true })
       v-if="content"
       class="max-w-full break-all text-center  font-mono opacity-85"
     >
-      {{ content }}
     </p>
   </div>
 </template>

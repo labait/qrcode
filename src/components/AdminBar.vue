@@ -19,12 +19,12 @@ const visible = computed(() => isAdmin(global.account))
       class="flex items-center gap-2 rounded-lg px-4 py-3 shadow-lg bg-black/80"
     >
       <Cog6ToothIcon
-        class="size-5 shrink-0 text-neutral-950 dark:text-white"
+        class="size-5 shrink-0 text-white dark:text-white"
         aria-hidden="true"
       />
       <RouterLink
         to="/admin/events"
-        class="rounded-md px-1 text-base font-medium text-neutral-950 underline-offset-4 transition hover:underline dark:text-white"
+        class="rounded-md px-1 text-base font-medium text-white underline-offset-4 transition hover:underline dark:text-white"
       >
         Events
       </RouterLink>
