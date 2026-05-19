@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth, createParticipation } from '../firebase.js'
-import { getEvent, verifyCurrentParticipation, LS_KEY_QRCODE_URL } from '../utils.js'
+import { getEvent, verifyCurrentParticipation, persistQrcodeResumeUrl } from '../utils.js'
 import { useGlobal } from '../composables/global.js'
 import EventCard from '../components/Event.vue'
 
@@ -122,6 +122,14 @@ onUnmounted(() => {
 })
 
 watch(
+  () => route.fullPath,
+  (fullPath) => {
+    persistQrcodeResumeUrl(fullPath)
+  },
+  { immediate: true },
+)
+
+watch(
   () => route.params.id,
   () => load(),
 )
@@ -132,14 +140,6 @@ async function onPartecipa() {
   await auth.authStateReady()
   const u = auth.currentUser
   if (!u) {
-    const id = routeLookupStr()
-    if (id) {
-      try {
-        localStorage.setItem(LS_KEY_QRCODE_URL, id)
-      } catch (e) {
-        console.warn('[EventView] localStorage qrcode_url', e)
-      }
-    }
     router.push({ name: 'login' })
     return
   }

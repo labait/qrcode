@@ -9,7 +9,7 @@ import {
   limit,
 } from 'firebase/firestore'
 
-/** Chiave localStorage: id route `/qrcodes/:id` per riprendere dopo login. */
+/** Chiave localStorage: URL assoluto pagina QR (`…/qrcodes/…`), ripreso dopo login. */
 export const LS_KEY_QRCODE_URL = 'qrcode_url'
 
 const COLLECTION_EVENTS = 'events'
@@ -37,6 +37,68 @@ export function absoluteUrl(path) {
   const normalized =
     typeof path === 'string' ? (path.startsWith('/') ? path : `/${path}`) : ''
   return `${base}${normalized}`
+}
+
+/** Path SPA (pathname + query + hash) sotto `/qrcodes/` → salvato come URL assoluto per il resume post-login. */
+export function persistQrcodeResumeUrl(pathWithQueryHash) {
+  if (typeof pathWithQueryHash !== 'string') return
+  let p = pathWithQueryHash.trim()
+  if (!p.startsWith('/')) p = `/${p}`
+  if (!p.startsWith('/qrcodes/')) return
+
+  try {
+    localStorage.setItem(LS_KEY_QRCODE_URL, absoluteUrl(p))
+  } catch (e) {
+    console.warn('[utils] persistQrcodeResumeUrl', e)
+  }
+}
+
+/**
+ * Interpreta quanto salvato nella chiave QR resume.
+ * Prima era solo id/code (legacy); ora URL assoluto del QR scannerizzato.
+ *
+ * @param {unknown} rawInput
+ * @returns {{ type: 'internalPath', path: string } | { type: 'externalHref', href: string } | { type: 'legacyId', id: string } | null}
+ */
+export function normalizeStoredQrcodeResume(rawInput) {
+  const raw = String(rawInput ?? '').trim()
+  if (!raw) return null
+
+  let parsed
+  try {
+    parsed = new URL(raw)
+  } catch {
+    return { type: 'legacyId', id: raw }
+  }
+
+  const pathQsHash = `${parsed.pathname}${parsed.search}${parsed.hash}`
+  if (!pathQsHash.startsWith('/qrcodes/')) {
+    console.warn('[utils] QR resume ignorato (path non /qrcodes/)', raw)
+    return null
+  }
+
+  const normOrigin = (o) =>
+    typeof o === 'string' && o.trim() !== '' ? o.trim().replace(/\/$/, '') : ''
+
+  const urlOriginNorm = normOrigin(parsed.origin)
+
+  let windowOriginNorm = ''
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    windowOriginNorm = normOrigin(window.location.origin)
+  }
+
+  const publicBaseNorm = normOrigin(baseUrlEnv())
+
+  const sameBrowserAsStored =
+    windowOriginNorm !== '' && windowOriginNorm === urlOriginNorm
+  const canonicalHostMatches =
+    publicBaseNorm !== '' && publicBaseNorm === urlOriginNorm
+
+  if (sameBrowserAsStored || canonicalHostMatches) {
+    return { type: 'internalPath', path: pathQsHash }
+  }
+
+  return { type: 'externalHref', href: raw }
 }
 
 /**
