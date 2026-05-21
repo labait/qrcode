@@ -14,7 +14,7 @@
     "@tailwindcss/vite": "^4.2.4",
     "firebase": "^12.12.1",
     "firebase-admin": "^13.10.0",
-    "googleapis": "^172.0.0",
+    "google-auth-library": "^10.6.2",
     "qrcode": "^1.5.4",
     "tailwindcss": "^4.2.4",
     "vue": "^3.5.32",

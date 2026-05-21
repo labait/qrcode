@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import admin from 'firebase-admin'
-import { google } from 'googleapis'
+import { GoogleAuth } from 'google-auth-library'
 
 const EVENTS = 'events'
 const ACCOUNTS = 'accounts'
@@ -93,12 +93,55 @@ async function assertAdmin(db, idToken) {
   return decoded.uid
 }
 
-async function getSheetsClient(serviceAccount) {
-  const auth = new google.auth.GoogleAuth({
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
+const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets'
+
+async function getSheetsAccessToken(serviceAccount) {
+  const auth = new GoogleAuth({
     credentials: serviceAccount,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    scopes: [SHEETS_SCOPE],
   })
-  return google.sheets({ version: 'v4', auth })
+  const client = await auth.getClient()
+  const { token } = await client.getAccessToken()
+  if (!token) throw new Error('Impossibile ottenere access token Google')
+  return token
+}
+
+async function sheetsRequest(token, method, path, body) {
+  const res = await fetch(`${SHEETS_BASE}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Google Sheets API ${res.status}: ${text}`)
+  }
+  if (res.status === 204) return null
+  const text = await res.text()
+  return text ? JSON.parse(text) : null
+}
+
+async function writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values) {
+  const token = await getSheetsAccessToken(serviceAccount)
+
+  await sheetsRequest(token, 'POST', `/${spreadsheetId}:batchUpdate`, {
+    requests: [{ addSheet: { properties: { title: sheetTitle } } }],
+  }).catch(() => null)
+
+  const range = encodeURIComponent(`${sheetTitle}!A:F`)
+  await sheetsRequest(token, 'POST', `/${spreadsheetId}/values/${range}:clear`, {})
+
+  const updateRange = encodeURIComponent(`${sheetTitle}!A1`)
+  await sheetsRequest(
+    token,
+    'PUT',
+    `/${spreadsheetId}/values/${updateRange}?valueInputOption=RAW`,
+    { values },
+  )
 }
 
 export async function handler(event) {
@@ -178,32 +221,7 @@ export async function handler(event) {
       ...rows,
     ]
 
-    const sheets = await getSheetsClient(serviceAccount)
-
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [
-          {
-            addSheet: {
-              properties: { title: sheetTitle },
-            },
-          },
-        ],
-      },
-    }).catch(() => null)
-
-    await sheets.spreadsheets.values.clear({
-      spreadsheetId,
-      range: `${sheetTitle}!A:F`,
-    })
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: `${sheetTitle}!A1`,
-      valueInputOption: 'RAW',
-      requestBody: { values },
-    })
+    await writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values)
 
     return json(200, {
       ok: true,
