@@ -10,6 +10,7 @@ import {
   addDoc,
   updateDoc,
   serverTimestamp,
+  getDocs,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -178,17 +179,39 @@ export async function getParticipationById(participationId) {
 /**
  * @param {string} uid
  * @param {string} eventDocumentId
- * @returns {Promise<{ id: string, uid: string, event_id: string, created_at?: unknown } | null>}
+ * @param {object} [event] Oggetto evento con id, code, title, ecc.
+ * @returns {Promise<{ id: string, uid: string, event_id: string, firstname?: string, lastname?: string, email?: string, event_code?: string, event_title?: string, created_at?: unknown } | null>}
  */
-export async function createParticipation(uid, eventDocumentId) {
+export async function createParticipation(uid, eventDocumentId, event) {
   if (!uid || !eventDocumentId) return null
-  const ref = await addDoc(collection(db, PARTICIPATIONS), {
+
+  const participationData = {
     created_at: serverTimestamp(),
     uid,
     event_id: eventDocumentId,
-  })
+  }
+
+  // Aggiungi dati dell'utente (firstname, lastname, email)
+  try {
+    const account = await getAccountByUid(uid)
+    if (account) {
+      if (account.firstname) participationData.firstname = account.firstname
+      if (account.lastname) participationData.lastname = account.lastname
+      if (account.email) participationData.email = account.email
+    }
+  } catch (err) {
+    console.warn('[firebase] createParticipation: failed to get account', err)
+  }
+
+  // Aggiungi dati dell'evento (event_code, event_title)
+  if (event) {
+    if (event.code) participationData.event_code = event.code
+    if (event.title) participationData.event_title = event.title
+  }
+
+  const ref = await addDoc(collection(db, PARTICIPATIONS), participationData)
   const snap = await getDoc(ref)
-  if (!snap.exists()) return { id: ref.id, uid, event_id: eventDocumentId }
+  if (!snap.exists()) return { id: ref.id, ...participationData }
   return { id: snap.id, ...snap.data() }
 }
 
@@ -202,4 +225,109 @@ export async function endParticipation(participationId) {
   }
   const ref = doc(db, PARTICIPATIONS, participationId)
   await updateDoc(ref, { ended_at: serverTimestamp() })
+}
+
+/**
+ * Aggiorna retroattivamente tutte le partecipazioni nella collezione con i dati dell'utente e dell'evento.
+ * Questa funzione:
+ * 1. Itera tutte le partecipazioni
+ * 2. Per ogni partecipazione, ottiene l'account dell'utente e l'evento
+ * 3. Aggiorna il documento con firstname, lastname, email (dall'utente) e event_code, event_title (dall'evento)
+ * 
+ * AVVERTENZA: operazione intensiva che richiede molte query Firestore.
+ * Usa solo da admin/console per aggiornamenti una volta.
+ * 
+ * @returns {Promise<{ updated: number, errors: number, details: Array }>}
+ */
+export async function retroactivelyUpdateParticipations() {
+  const stats = { updated: 0, errors: 0, details: [] }
+  
+  try {
+    console.log('[firebase] Starting retroactive participation update...')
+    
+    // Itera tutte le partecipazioni
+    const participationsSnap = await getDocs(collection(db, PARTICIPATIONS))
+    const total = participationsSnap.size
+    
+    console.log(`[firebase] Found ${total} participations to process`)
+    
+    for (const partSnap of participationsSnap.docs) {
+      const partId = partSnap.id
+      const partData = partSnap.data()
+      const uid = partData.uid
+      const eventId = partData.event_id
+      
+      if (!uid || !eventId) {
+        console.warn(`[firebase] Skipping participation ${partId}: missing uid or event_id`)
+        stats.errors++
+        stats.details.push({ id: partId, status: 'skipped', reason: 'missing uid or event_id' })
+        continue
+      }
+      
+      try {
+        const updateData = {}
+        let hasChanges = false
+        
+        // Ottieni account dell'utente
+        try {
+          const account = await getAccountByUid(uid)
+          if (account) {
+            if (account.firstname && !partData.firstname) {
+              updateData.firstname = account.firstname
+              hasChanges = true
+            }
+            if (account.lastname && !partData.lastname) {
+              updateData.lastname = account.lastname
+              hasChanges = true
+            }
+            if (account.email && !partData.email) {
+              updateData.email = account.email
+              hasChanges = true
+            }
+          }
+        } catch (err) {
+          console.warn(`[firebase] Failed to get account for uid ${uid}:`, err)
+        }
+        
+        // Ottieni evento
+        try {
+          const eventSnap = await getDoc(doc(db, 'events', eventId))
+          if (eventSnap.exists()) {
+            const event = eventSnap.data()
+            if (event.code && !partData.event_code) {
+              updateData.event_code = event.code
+              hasChanges = true
+            }
+            if (event.title && !partData.event_title) {
+              updateData.event_title = event.title
+              hasChanges = true
+            }
+          }
+        } catch (err) {
+          console.warn(`[firebase] Failed to get event ${eventId}:`, err)
+        }
+        
+        // Aggiorna il documento se ci sono cambiamenti
+        if (hasChanges) {
+          const partRef = doc(db, PARTICIPATIONS, partId)
+          await updateDoc(partRef, updateData)
+          stats.updated++
+          stats.details.push({ id: partId, status: 'updated', changes: Object.keys(updateData) })
+          console.log(`[firebase] Updated participation ${partId} with:`, Object.keys(updateData))
+        } else {
+          stats.details.push({ id: partId, status: 'no_changes' })
+        }
+      } catch (err) {
+        stats.errors++
+        stats.details.push({ id: partId, status: 'error', error: err.message })
+        console.error(`[firebase] Error updating participation ${partId}:`, err)
+      }
+    }
+    
+    console.log('[firebase] Retroactive update completed', stats)
+    return stats
+  } catch (err) {
+    console.error('[firebase] retroactivelyUpdateParticipations failed:', err)
+    throw err
+  }
 }

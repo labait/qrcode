@@ -247,7 +247,7 @@ async function onPartecipa() {
       return
     }
 
-    const p = await createParticipation(u.uid, event.value.id)
+    const p = await createParticipation(u.uid, event.value.id, event.value)
     if (!p?.id) return
 
     global.event = event.value

@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update:participations": "node scripts/update-participations.js"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
     "@tailwindcss/vite": "^4.2.4",
     "firebase": "^12.12.1",
+    "firebase-admin": "^13.10.0",
     "qrcode": "^1.5.4",
     "tailwindcss": "^4.2.4",
     "vue": "^3.5.32",
