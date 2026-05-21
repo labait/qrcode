@@ -213,7 +213,7 @@ onMounted(() => {
         <input
           v-model="form.valid_from"
           type="datetime-local"
-          class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base outline-none ring-offset-2 transition focus:border-neutral-400 focus:ring-2 focus:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950"
+          class="w-full rounded-md border-2 border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 outline-none ring-offset-2 transition [color-scheme:light] focus:border-neutral-500 focus:ring-2 focus:ring-neutral-400/50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white dark:[color-scheme:dark] dark:focus:border-neutral-400 dark:focus:ring-neutral-500/50"
         >
       </label>
 
@@ -222,7 +222,7 @@ onMounted(() => {
         <input
           v-model="form.valid_to"
           type="datetime-local"
-          class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base outline-none ring-offset-2 transition focus:border-neutral-400 focus:ring-2 focus:ring-neutral-300 dark:border-neutral-700 dark:bg-neutral-950"
+          class="w-full rounded-md border-2 border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 outline-none ring-offset-2 transition [color-scheme:light] focus:border-neutral-500 focus:ring-2 focus:ring-neutral-400/50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white dark:[color-scheme:dark] dark:focus:border-neutral-400 dark:focus:ring-neutral-500/50"
         >
       </label>
 

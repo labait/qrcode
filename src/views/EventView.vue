@@ -36,11 +36,15 @@ function routeLookupStr() {
   return String(route.params.id ?? '').trim()
 }
 
+function isEventRoute() {
+  return route.name === 'eventQrcode' || route.name === 'eventDetail'
+}
+
 /** Salva l’URL QR in localStorage solo se l’utente non è loggato e siamo ancora sulla route evento. */
 async function maybePersistQrUrlForAnonymousVisit() {
   await auth.authStateReady()
   if (auth.currentUser) return
-  if (route.name !== 'eventQrcode') return
+  if (!isEventRoute()) return
   persistCurrentPageUrlAfterLogin()
 }
 
@@ -66,7 +70,7 @@ function openLoginRequiredDialogToLogin() {
 async function maybeShowLoginRequiredForAnonymous() {
   await auth.authStateReady()
   if (auth.currentUser) return
-  if (route.name !== 'eventQrcode') return
+  if (!isEventRoute()) return
   if (!event.value) return
   if (showedLoginRequiredDialog) return
 

@@ -61,6 +61,11 @@ const routes = [
     component: EventView,
   },
   {
+    path: '/events/:id',
+    name: 'eventDetail',
+    component: EventView,
+  },
+  {
     path: '/participations/:id',
     name: 'participationDetail',
     component: ParticipationView,
