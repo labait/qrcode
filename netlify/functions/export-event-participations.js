@@ -165,6 +165,71 @@ function buildSpreadsheetUrl(spreadsheetId, sheetGid) {
   return base
 }
 
+function compareByName(a, b) {
+  const byLastname = a.lastname.localeCompare(b.lastname, 'it', { sensitivity: 'base' })
+  if (byLastname !== 0) return byLastname
+  return a.firstname.localeCompare(b.firstname, 'it', { sensitivity: 'base' })
+}
+
+async function resolveParticipationEntry(db, pDoc) {
+  const p = pDoc.data()
+
+  let firstname = String(p.firstname ?? '')
+  let lastname = String(p.lastname ?? '')
+  let email = String(p.email ?? '')
+
+  if ((!firstname || !lastname || !email) && p.uid) {
+    const aSnap = await db.collection(ACCOUNTS).doc(String(p.uid)).get()
+    if (aSnap.exists) {
+      const a = aSnap.data()
+      if (!firstname) firstname = String(a.firstname ?? '')
+      if (!lastname) lastname = String(a.lastname ?? '')
+      if (!email) email = String(a.email ?? '')
+    }
+  }
+
+  return {
+    participationId: pDoc.id,
+    firstname,
+    lastname,
+    email,
+  }
+}
+
+function buildExportRows(entries, ev, eventCode) {
+  const sorted = [...entries].sort(compareByName)
+
+  const byEmail = new Map()
+  for (const entry of sorted) {
+    const emailKey = entry.email.trim().toLowerCase()
+    const key = emailKey || `__no_email__:${entry.participationId}`
+
+    const existing = byEmail.get(key)
+    if (!existing) {
+      byEmail.set(key, {
+        firstname: entry.firstname,
+        lastname: entry.lastname,
+        email: entry.email,
+        participationIds: [entry.participationId],
+      })
+      continue
+    }
+
+    existing.participationIds.push(entry.participationId)
+  }
+
+  const grouped = [...byEmail.values()].sort(compareByName)
+
+  return grouped.map((row) => [
+    ev.id,
+    eventCode,
+    row.firstname,
+    row.lastname,
+    row.email,
+    row.participationIds.join(','),
+  ])
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Method not allowed' })
@@ -209,36 +274,15 @@ export async function handler(event) {
       .where('event_id', '==', ev.id)
       .get()
 
-    const rows = []
+    const entries = []
     for (const pDoc of partSnap.docs) {
-      const p = pDoc.data()
-
-      let firstname = String(p.firstname ?? '')
-      let lastname = String(p.lastname ?? '')
-      let email = String(p.email ?? '')
-
-      if ((!firstname || !lastname || !email) && p.uid) {
-        const aSnap = await db.collection(ACCOUNTS).doc(String(p.uid)).get()
-        if (aSnap.exists) {
-          const a = aSnap.data()
-          if (!firstname) firstname = String(a.firstname ?? '')
-          if (!lastname) lastname = String(a.lastname ?? '')
-          if (!email) email = String(a.email ?? '')
-        }
-      }
-
-      rows.push([
-        pDoc.id,
-        ev.id,
-        eventCode,
-        firstname,
-        lastname,
-        email,
-      ])
+      entries.push(await resolveParticipationEntry(db, pDoc))
     }
 
+    const rows = buildExportRows(entries, ev, eventCode)
+
     const values = [
-      ['participation.id', 'event.id', 'event.code', 'firstname', 'lastname', 'email'],
+      ['event.id', 'event.code', 'firstname', 'lastname', 'email', 'participations'],
       ...rows,
     ]
 
