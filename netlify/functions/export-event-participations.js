@@ -128,9 +128,22 @@ async function sheetsRequest(token, method, path, body) {
 async function writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values) {
   const token = await getSheetsAccessToken(serviceAccount)
 
-  await sheetsRequest(token, 'POST', `/${spreadsheetId}:batchUpdate`, {
+  let sheetGid = null
+  const addResult = await sheetsRequest(token, 'POST', `/${spreadsheetId}:batchUpdate`, {
     requests: [{ addSheet: { properties: { title: sheetTitle } } }],
   }).catch(() => null)
+
+  if (addResult?.replies?.[0]?.addSheet?.properties?.sheetId != null) {
+    sheetGid = addResult.replies[0].addSheet.properties.sheetId
+  } else {
+    const meta = await sheetsRequest(
+      token,
+      'GET',
+      `/${spreadsheetId}?fields=${encodeURIComponent('sheets.properties')}`,
+    )
+    const sheet = meta?.sheets?.find((s) => s.properties?.title === sheetTitle)
+    sheetGid = sheet?.properties?.sheetId ?? null
+  }
 
   const range = encodeURIComponent(`${sheetTitle}!A:F`)
   await sheetsRequest(token, 'POST', `/${spreadsheetId}/values/${range}:clear`, {})
@@ -142,6 +155,14 @@ async function writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values)
     `/${spreadsheetId}/values/${updateRange}?valueInputOption=RAW`,
     { values },
   )
+
+  return sheetGid
+}
+
+function buildSpreadsheetUrl(spreadsheetId, sheetGid) {
+  const base = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
+  if (sheetGid != null) return `${base}#gid=${sheetGid}`
+  return base
 }
 
 export async function handler(event) {
@@ -221,7 +242,8 @@ export async function handler(event) {
       ...rows,
     ]
 
-    await writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values)
+    const sheetGid = await writeSheetData(serviceAccount, spreadsheetId, sheetTitle, values)
+    const spreadsheetUrl = buildSpreadsheetUrl(spreadsheetId, sheetGid)
 
     return json(200, {
       ok: true,
@@ -229,8 +251,10 @@ export async function handler(event) {
       eventCode,
       eventTitle,
       sheetTitle,
+      sheetGid,
       rowsWritten: rows.length,
       spreadsheetId,
+      spreadsheetUrl,
     })
   } catch (err) {
     return json(500, {

@@ -5,6 +5,8 @@ export const globalInjectionKey = Symbol('global')
 export function createGlobalState() {
   return reactive({
     loading: 0,
+    /** Testo opzionale mostrato da Loading.vue; default "Loading...". */
+    loadingText: null,
     dialog: null,
     account: null,
     /** Evento corrente (es. dopo join a una partecipazione). */

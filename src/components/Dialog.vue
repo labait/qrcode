@@ -43,6 +43,16 @@ async function handleCancel() {
         {{ global.dialog.content }}
       </p>
 
+      <a
+        v-if="global.dialog?.link?.href"
+        :href="global.dialog.link.href"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-4 inline-block break-all text-blue-600 underline underline-offset-2 hover:text-blue-800"
+      >
+        {{ global.dialog.link.label ?? global.dialog.link.href }}
+      </a>
+
       <div class="mt-6 flex justify-end gap-3">
         <button
           type="button"

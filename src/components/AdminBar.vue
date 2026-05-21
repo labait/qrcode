@@ -21,6 +21,7 @@ async function exportParticipations() {
   const lookup = String(route.params.id ?? '').trim()
   if (!lookup) return
 
+  global.loadingText = 'Exporting to Google Spreadsheet, please wait...'
   global.loading++
   try {
     let eventLookup = lookup
@@ -84,9 +85,19 @@ async function exportParticipations() {
     }
 
     const updatedRows = Number(payload?.rowsWritten ?? 0)
+    const spreadsheetUrl = String(payload?.spreadsheetUrl ?? '').trim()
+    const sheetTitle = String(payload?.sheetTitle ?? '').trim()
     global.dialog = {
       title: 'Export completato',
       content: `Esportazione completata. Righe salvate: ${updatedRows}.`,
+      link: spreadsheetUrl
+        ? {
+            href: spreadsheetUrl,
+            label: sheetTitle
+              ? `Apri foglio "${sheetTitle}" su Google Spreadsheet`
+              : 'Apri Google Spreadsheet',
+          }
+        : undefined,
     }
   } catch (err) {
     global.dialog = {
@@ -95,6 +106,7 @@ async function exportParticipations() {
     }
   } finally {
     global.loading--
+    if (global.loading === 0) global.loadingText = null
   }
 }
 </script>
