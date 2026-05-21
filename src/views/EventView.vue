@@ -25,7 +25,8 @@ const hasActiveParticipation = ref(false)
 let showedActiveParticipationDialog = false
 /** Dialog “serve accedere” una sola volta per caricamento della pagina evento (anonimo). */
 let showedLoginRequiredDialog = false
-
+/** Dialog "Confermi partecipazione?" una sola volta per caricamento della pagina (utente loggato, senza partecipazione attiva). */
+let showedParticipationConfirmationDialog = false
 let unsubscribeAuth = () => {}
 /** @type {string | null | undefined} */
 let lastAuthUid = undefined
@@ -123,6 +124,34 @@ async function checkActiveParticipationOnOpen() {
         global.dialog = null
       },
     }
+  } else if (!active && !showedParticipationConfirmationDialog) {
+    // Mostra il dialog di conferma partecipazione per utente loggato senza partecipazione attiva
+    await maybeShowParticipationConfirmation()
+  }
+}
+
+/**
+ * Mostra il dialog "Confermi partecipazione?" una sola volta per utente loggato senza partecipazione attiva.
+ */
+async function maybeShowParticipationConfirmation() {
+  if (!event.value) return
+  if (!firebaseUser.value) return
+  if (hasActiveParticipation.value) return
+  if (showedParticipationConfirmationDialog) return
+
+  showedParticipationConfirmationDialog = true
+  global.dialog = {
+    title: 'Conferma partecipazione',
+    content: 'Confermi partecipazione?',
+    cancelLabel: 'Annulla',
+    okLabel: 'Sì',
+    onOk: async () => {
+      global.dialog = null
+      await onPartecipa()
+    },
+    onCancel: () => {
+      global.dialog = null
+    },
   }
 }
 
@@ -132,6 +161,7 @@ async function load() {
   hasActiveParticipation.value = false
   showedActiveParticipationDialog = false
   showedLoginRequiredDialog = false
+  showedParticipationConfirmationDialog = false
 
   const param = routeLookupStr()
   const ev = await getEvent(param)
@@ -161,6 +191,7 @@ onMounted(async () => {
     if (uid !== lastAuthUid) {
       showedActiveParticipationDialog = false
       showedLoginRequiredDialog = false
+      showedParticipationConfirmationDialog = false
       lastAuthUid = uid
     }
     if (event.value) {

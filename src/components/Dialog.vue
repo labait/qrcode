@@ -49,14 +49,14 @@ async function handleCancel() {
           class="rounded-md border border-neutral-300 bg-neutral-100 px-4 py-2 text-neutral-700 hover:bg-neutral-200"
           @click="handleCancel"
         >
-          Cancel
+          {{ global.dialog?.cancelLabel ?? 'Cancel' }}
         </button>
         <button
           type="button"
           class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           @click="handleOk"
         >
-          Ok
+          {{ global.dialog?.okLabel ?? 'Ok' }}
         </button>
       </div>
     </div>
