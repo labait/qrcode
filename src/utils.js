@@ -40,6 +40,26 @@ export function absoluteUrl(path) {
 }
 
 /**
+ * Restituisce lo spreadsheet target per un evento.
+ * Priorita':
+ * 1) `event.spreadsheet_id` se presente
+ * 2) `VITE_GOOGLE_SPREADSHEET_ID` come default applicativo
+ * @param {object | null | undefined} event
+ * @returns {string}
+ */
+export function getSpreadsheetIdForEvent(event) {
+  const fromEvent =
+    typeof event?.spreadsheet_id === 'string' ? event.spreadsheet_id.trim() : ''
+  if (fromEvent) return fromEvent
+
+  const fallback =
+    typeof import.meta.env?.VITE_GOOGLE_SPREADSHEET_ID === 'string'
+      ? import.meta.env.VITE_GOOGLE_SPREADSHEET_ID.trim()
+      : ''
+  return fallback
+}
+
+/**
  * Salva `window.location.href` in `LS_KEY_POST_LOGIN_URL` per il ripristino dopo login.
  * Chiamare solo con utente non loggato (EventView) per non riscrivere dopo il redirect post-accesso.
  */

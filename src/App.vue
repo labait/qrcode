@@ -24,7 +24,7 @@ const padBottomForAdminBar = computed(() =>
     <AppHeader class="mb-8"/>
     <Auth />
     <main
-      class="mx-auto flex max-w-6xl flex-1 flex-col items-center justify-center py-4 transition-[padding]"
+      class="mx-auto flex flex-1 flex-col items-center justify-center py-4 transition-[padding]"
       :class="padBottomForAdminBar"
     >
       

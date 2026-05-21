@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import DetailView from '../views/DetailView.vue'
 import LoginView from '../views/LoginView.vue'
 import AdminEventsView from '../views/AdminEventsView.vue'
+import AdminEventsForm from '../views/AdminEventsForm.vue'
 import EventView from '../views/EventView.vue'
 import ParticipationView from '../views/ParticipationView.vue'
 import { auth, getAccountByUid, isAdmin, isLoggedIn } from '../firebase.js'
@@ -69,6 +70,18 @@ const routes = [
     path: '/admin/events',
     name: 'adminEvents',
     component: AdminEventsView,
+    beforeEnter: beforeEnterRequireAdmin,
+  },
+  {
+    path: '/admin/events/new',
+    name: 'adminEventNew',
+    component: AdminEventsForm,
+    beforeEnter: beforeEnterRequireAdmin,
+  },
+  {
+    path: '/admin/events/:id/edit',
+    name: 'adminEventEdit',
+    component: AdminEventsForm,
     beforeEnter: beforeEnterRequireAdmin,
   },
 ]

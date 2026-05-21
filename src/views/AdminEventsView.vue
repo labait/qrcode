@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import QRCode from 'qrcode'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase.js'
@@ -80,6 +81,15 @@ function fmt(ts) {
       </p>
     </header>
 
+    <div class="flex justify-center">
+      <RouterLink
+        :to="{ name: 'adminEventNew' }"
+        class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base font-medium text-neutral-900 transition hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+      >
+        add event
+      </RouterLink>
+    </div>
+
     <p
       v-if="events.length === 0"
       class="text-center opacity-90"
@@ -131,6 +141,19 @@ function fmt(ts) {
             </div>
 
             <dl class="space-y-2 text-base text-neutral-800 dark:text-neutral-200">
+              <div class="flex flex-col gap-0.5">
+                <dt class=" font-medium uppercase tracking-wide opacity-75">
+                  actions
+                </dt>
+                <dd>
+                  <RouterLink
+                    :to="{ name: 'adminEventEdit', params: { id: ev.id } }"
+                    class="font-medium underline underline-offset-2"
+                  >
+                    edit
+                  </RouterLink>
+                </dd>
+              </div>
               <div class="flex flex-col gap-0.5">
                 <dt class=" font-medium uppercase tracking-wide opacity-75">
                   title
