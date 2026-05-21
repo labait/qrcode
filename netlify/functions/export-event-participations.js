@@ -223,8 +223,8 @@ function buildExportRows(entries, ev, eventCode) {
   return grouped.map((row) => [
     ev.id,
     eventCode,
-    row.firstname,
     row.lastname,
+    row.firstname,
     row.email,
     row.participationIds.join(','),
   ])
@@ -282,7 +282,7 @@ export async function handler(event) {
     const rows = buildExportRows(entries, ev, eventCode)
 
     const values = [
-      ['event.id', 'event.code', 'firstname', 'lastname', 'email', 'participations'],
+      ['event.id', 'event.code', 'lastname', 'firstname', 'email', 'participations'],
       ...rows,
     ]
 
