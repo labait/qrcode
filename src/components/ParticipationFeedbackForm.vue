@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { ChartBarSquareIcon, CheckIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { setParticipationFeedback } from '../firebase.js'
 import { useGlobal } from '../composables/global.js'
 
@@ -33,33 +32,40 @@ async function submit(feedback) {
 </script>
 
 <template>
-  <div class="flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl bg-black/5 p-6">
-    <ChartBarSquareIcon
-      class="size-10 opacity-80"
-      aria-hidden="true"
-    />
-    <p class="text-center text-base">
-      Come valuti l'evento?
-    </p>
-    <div class="flex items-center justify-center gap-4">
-      <button
-        type="button"
-        class="inline-flex size-14 items-center justify-center rounded-full border border-green-600 bg-white text-green-600 transition hover:bg-green-50 disabled:opacity-50"
-        :disabled="submitting"
-        aria-label="Feedback ok"
-        @click="submit('ok')"
-      >
-        <CheckIcon class="size-8" />
-      </button>
-      <button
-        type="button"
-        class="inline-flex size-14 items-center justify-center rounded-full border border-red-600 bg-white text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-        :disabled="submitting"
-        aria-label="Feedback ko"
-        @click="submit('ko')"
-      >
-        <XMarkIcon class="size-8" />
-      </button>
+  <Teleport to="body">
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="feedback-title"
+    >
+      <div class="w-full max-w-sm rounded-lg bg-white p-6 text-black shadow-xl">
+        <h2
+          id="feedback-title"
+          class="text-center text-xl font-semibold"
+        >
+          Feedback?
+        </h2>
+
+        <div class="mt-6 flex justify-center gap-3">
+          <button
+            type="button"
+            class="rounded-md bg-green-600 px-6 py-2 text-base font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+            :disabled="submitting"
+            @click="submit('ok')"
+          >
+            Sì
+          </button>
+          <button
+            type="button"
+            class="rounded-md bg-red-600 px-6 py-2 text-base font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+            :disabled="submitting"
+            @click="submit('ko')"
+          >
+            No
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
