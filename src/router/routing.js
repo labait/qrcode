@@ -5,6 +5,7 @@ import LoginView from '../views/LoginView.vue'
 import AdminEventsView from '../views/AdminEventsView.vue'
 import AdminEventsForm from '../views/AdminEventsForm.vue'
 import EventView from '../views/EventView.vue'
+import EventFeedbacksView from '../views/EventFeedbacksView.vue'
 import ParticipationView from '../views/ParticipationView.vue'
 import { auth, getAccountByUid, isAdmin, isLoggedIn } from '../firebase.js'
 
@@ -64,6 +65,12 @@ const routes = [
     path: '/events/:id',
     name: 'eventDetail',
     component: EventView,
+  },
+  {
+    path: '/events/:id/feedbacks',
+    name: 'eventFeedbacks',
+    component: EventFeedbacksView,
+    beforeEnter: beforeEnterRequireAdmin,
   },
   {
     path: '/participations/:id',

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { LinkIcon, PencilSquareIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { LinkIcon, ChartBarSquareIcon, PencilSquareIcon, ShareIcon } from '@heroicons/vue/24/outline'
 import QrCode from './QrCode.vue'
 import { useGlobal } from '../composables/global.js'
 import { isAdmin } from '../firebase.js'
@@ -114,6 +114,14 @@ function showShareFeedback() {
       <QrCode :content="pageUrl" class="text-xs" />
 
       <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
+        <RouterLink
+          v-if="isAdminUser"
+          :to="{ name: 'eventFeedbacks', params: { id: event.id } }"
+          class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white p-2 text-neutral-900 transition hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+          aria-label="Feedbacks evento"
+        >
+          <ChartBarSquareIcon class="h-5 w-5" aria-hidden="true" />
+        </RouterLink>
         <button
           type="button"
           class="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base font-medium text-neutral-900 transition hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"

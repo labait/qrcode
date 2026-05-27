@@ -118,14 +118,31 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ended_at']);
       }
 
+      function participationFeedbackOnly() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback', 'updated_at']) &&
+          request.resource.data.feedback in ['ok', 'ko'] &&
+          request.resource.data.updated_at is timestamp &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.event_id == resource.data.event_id;
+      }
+
       allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
 
       allow create: if signedIn() && participationCreateValid();
 
-      allow update: if signedIn() && ownsParticipation() &&
-        participationEndOnly() &&
-        request.resource.data.uid == resource.data.uid &&
-        request.resource.data.event_id == resource.data.event_id;
+      allow update: if isAdmin() ||
+        (
+          signedIn() &&
+          ownsParticipation() &&
+          (
+            (
+              participationEndOnly() &&
+              request.resource.data.uid == resource.data.uid &&
+              request.resource.data.event_id == resource.data.event_id
+            ) ||
+            participationFeedbackOnly()
+          )
+        );
 
       allow delete: if isAdmin();
     }

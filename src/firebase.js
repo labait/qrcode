@@ -11,6 +11,10 @@ import {
   updateDoc,
   serverTimestamp,
   getDocs,
+  onSnapshot,
+  query,
+  where,
+  writeBatch,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -225,6 +229,87 @@ export async function endParticipation(participationId) {
   }
   const ref = doc(db, PARTICIPATIONS, participationId)
   await updateDoc(ref, { ended_at: serverTimestamp() })
+}
+
+/**
+ * @param {string} participationId
+ * @param {'ok' | 'ko'} feedback
+ */
+export async function setParticipationFeedback(participationId, feedback) {
+  if (!participationId) {
+    throw new Error('setParticipationFeedback: participationId mancante')
+  }
+  if (feedback !== 'ok' && feedback !== 'ko') {
+    throw new Error('setParticipationFeedback: feedback non valido')
+  }
+  await updateDoc(doc(db, PARTICIPATIONS, participationId), {
+    feedback,
+    updated_at: serverTimestamp(),
+  })
+}
+
+/**
+ * Avvia raccolta feedback: `get_feedback=true` sull'evento e reset su tutte le partecipazioni.
+ * @param {string} eventId
+ */
+export async function startEventFeedback(eventId) {
+  if (!eventId) {
+    throw new Error('startEventFeedback: eventId mancante')
+  }
+
+  await updateDoc(doc(db, 'events', eventId), { get_feedback: true })
+
+  const snap = await getDocs(
+    query(collection(db, PARTICIPATIONS), where('event_id', '==', eventId)),
+  )
+
+  if (snap.empty) return
+
+  const batch = writeBatch(db)
+  for (const part of snap.docs) {
+    batch.update(part.ref, { feedback: null, updated_at: null })
+  }
+  await batch.commit()
+}
+
+/**
+ * Sottoscrizione live a un documento evento.
+ * @param {string} eventId
+ * @param {(event: object | null) => void} onChange
+ * @returns {() => void}
+ */
+export function subscribeEvent(eventId, onChange) {
+  if (!eventId) return () => {}
+  return onSnapshot(doc(db, 'events', eventId), (snap) => {
+    onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+  })
+}
+
+/**
+ * Sottoscrizione live a una partecipazione.
+ * @param {string} participationId
+ * @param {(participation: object | null) => void} onChange
+ * @returns {() => void}
+ */
+export function subscribeParticipation(participationId, onChange) {
+  if (!participationId) return () => {}
+  return onSnapshot(doc(db, PARTICIPATIONS, participationId), (snap) => {
+    onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null)
+  })
+}
+
+/**
+ * Sottoscrizione live alle partecipazioni di un evento.
+ * @param {string} eventId
+ * @param {(participations: object[]) => void} onChange
+ * @returns {() => void}
+ */
+export function subscribeEventParticipations(eventId, onChange) {
+  if (!eventId) return () => {}
+  const q = query(collection(db, PARTICIPATIONS), where('event_id', '==', eventId))
+  return onSnapshot(q, (snap) => {
+    onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+  })
 }
 
 /**

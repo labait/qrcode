@@ -12,7 +12,7 @@ const route = useRoute()
 
 const isAdminUser = computed(() => isAdmin(global.account))
 const onExportableRoute = computed(
-  () => route.name === 'eventQrcode' || route.name === 'eventDetail' || route.name === 'participationDetail',
+  () => route.name === 'eventQrcode' || route.name === 'eventDetail' || route.name === 'eventFeedbacks' || route.name === 'participationDetail',
 )
 const visible = computed(() => isAdminUser.value)
 const showExportLink = computed(() => isAdminUser.value && onExportableRoute.value)
